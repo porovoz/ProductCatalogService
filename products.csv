@@ -1,0 +1,6 @@
+id;name;description;price;category;brand;stockQuantity
+4604261d-768f-47a0-ae6b-c809840921a8;book;good;1.0;books;asd;32
+3d9e9be9-385a-44a0-aaab-b40a19f37e54;car;sports car;23.0;auto;audi;43
+069e9683-f98b-43b0-ab95-7b59a00e7c09;gun;machine gun;545.0;weapon;luger;32
+9c9260df-1526-41ac-b617-876b67e25a29;car;sports;434.0;auto;bmw;32
+943ffbd3-6ffc-4098-8e1e-c5b9415404ef;toy;plush;3.0;toys;b;45
