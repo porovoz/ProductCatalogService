@@ -1,6 +1,6 @@
 package com.bestapp.com.metrics;
 
-import com.bestapp.com.model.ProductCatalog;
+import com.bestapp.com.service.ProductService;
 
 /**
  * Provides simple metrics: request duration and product count.
@@ -26,13 +26,13 @@ public class Metrics {
     }
 
     /**
-     * Returns the total number of products in the catalog.
+     * Returns the total number of products.
      *
-     * @param catalog product catalog instance.
+     * @param productService ProductService instance.
      * @return total product count.
      */
-    public int getProductCount(ProductCatalog catalog) {
-        return catalog.getProducts().size();
+    public int getProductCount(ProductService productService) {
+        return productService.getAllProducts().size();
     }
 
 }

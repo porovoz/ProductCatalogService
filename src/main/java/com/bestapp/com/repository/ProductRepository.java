@@ -1,7 +1,8 @@
-package com.bestapp.com.model;
+package com.bestapp.com.repository;
 
 import com.bestapp.com.cache.CacheType;
 import com.bestapp.com.cache.ProductCache;
+import com.bestapp.com.model.Product;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -9,42 +10,27 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Represents the main product catalog in the marketplace.
+ * Represents the product repository.
  * <p>
  * Provides CRUD operations, caching of frequent queries, and search functionality.
  * </p>
  */
-public class ProductCatalog {
+public class ProductRepository {
 
     private final Map<String, Product> products = new LinkedHashMap<>();
     private final ProductCache cache = new ProductCache();
 
     /**
-     * Adds a new product to the catalog.
+     * Saves a new product to the repository.
      * <p>
      * Clears all cached data after modification.
      * </p>
      *
      * @param product new product to add
      */
-    public void addProduct(Product product) {
+    public void save(Product product) {
         products.put(product.getId(), product);
         cache.clearAll();
-    }
-
-    /**
-     * Removes a product from the catalog by its ID.
-     *
-     * @param id ID of the product to remove
-     * @throws IllegalArgumentException if the product is not found
-     */
-    public void removeProductById(String id) {
-        Product removed = products.remove(id);
-        if (removed != null) {
-            cache.clearAll();
-        } else {
-            throw new IllegalArgumentException("Product with ID " + id + " not found.");
-        }
     }
 
     /**
@@ -58,7 +44,7 @@ public class ProductCatalog {
      * @param newProduct new product data
      * @throws IllegalArgumentException if the product does not exist
      */
-    public void updateProductById(String id, Product newProduct) {
+    public void updateById(String id, Product newProduct) {
         boolean updated = products.computeIfPresent(id, (key, old) -> {
             newProduct.setId(id);
             cache.clearAll();
@@ -70,14 +56,29 @@ public class ProductCatalog {
     }
 
     /**
-     * Returns all products in the catalog.
+     * Deletes a product from the repository by its ID.
+     *
+     * @param id ID of the product to remove
+     * @throws IllegalArgumentException if the product is not found
+     */
+    public void deleteById(String id) {
+        Product removed = products.remove(id);
+        if (removed != null) {
+            cache.clearAll();
+        } else {
+            throw new IllegalArgumentException("Product with ID " + id + " not found.");
+        }
+    }
+
+    /**
+     * Returns all products in the repository.
      * <p>
      * Uses caching for faster access on repeated calls.
      * </p>
      *
      * @return list of all products
      */
-    public List<Product> getProducts() {
+    public List<Product> findAll() {
         List<Product> cached = cache.getFromCache("all", CacheType.ALL);
         if (!cached.isEmpty()) {
             return cached;
@@ -88,18 +89,25 @@ public class ProductCatalog {
     }
 
     /**
+     * @return uncached list of products (used for persistence).
+     * */
+    public List<Product> findAllUncached() {
+        return new ArrayList<>(products.values());
+    }
+
+    /**
      * Searches products by category.
      *
      * @param category category name
      * @return list of matching products or empty list
      */
-    public List<Product> searchByCategory(String category) {
+    public List<Product> findByCategory(String category) {
         List<Product> cached = cache.getFromCache(category, CacheType.CATEGORY);
         if (!cached.isEmpty()) {
             return cached;
         }
         List<Product> result = products.values().stream()
-                .filter(p -> p.getCategory().equalsIgnoreCase(category))
+                .filter(p -> p.getCategory() != null && p.getCategory().equalsIgnoreCase(category))
                 .toList();
         if (result.isEmpty()) {
             System.out.println("No products found in category: " + category);
@@ -114,13 +122,13 @@ public class ProductCatalog {
      * @param brand brand name
      * @return list of matching products or empty list
      */
-    public List<Product> searchByBrand(String brand) {
+    public List<Product> findByBrand(String brand) {
         List<Product> cached = cache.getFromCache(brand, CacheType.BRAND);
         if (!cached.isEmpty()) {
             return cached;
         }
         List<Product> result = products.values().stream()
-                .filter(p -> p.getBrand().equalsIgnoreCase(brand))
+                .filter(p -> p.getBrand() != null && p.getBrand().equalsIgnoreCase(brand))
                 .toList();
         if (result.isEmpty()) {
             System.out.println("No products found for brand: " + brand);
@@ -136,7 +144,7 @@ public class ProductCatalog {
      * @param maxPrice maximum price (inclusive)
      * @return list of products within range or empty list
      */
-    public List<Product> searchByPriceRange(double minPrice, double maxPrice) {
+    public List<Product> findByPriceRange(double minPrice, double maxPrice) {
         String key = minPrice + "-" + maxPrice;
         List<Product> cached = cache.getFromCache(key, CacheType.PRICE);
         if (!cached.isEmpty()) {
@@ -153,13 +161,6 @@ public class ProductCatalog {
     }
 
     /**
-     * @return uncached list of products (used for persistence).
-     * */
-    public List<Product> getAllProductsDirect() {
-        return new ArrayList<>(products.values());
-    }
-
-    /**
      * @return cache instance.
      */
     public ProductCache getCache() {
@@ -167,10 +168,9 @@ public class ProductCatalog {
     }
 
     /**
-     * @return true if a product not exists by ID.
+     * @return true if a product exists by ID.
      */
-    public boolean notExists(String id) {
-        return !products.containsKey(id);
+    public boolean existsById(String id) {
+        return products.containsKey(id);
     }
-
 }

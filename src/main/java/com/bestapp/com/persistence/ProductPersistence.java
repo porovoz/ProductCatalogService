@@ -13,7 +13,7 @@ import java.util.List;
  */
 public class ProductPersistence {
 
-    private static final String FILE_PATH = "products.csv";
+    private static final String FILE = "products.csv";
     private static final String DELIMITER = ";";
 
     private ProductPersistence() {
@@ -26,7 +26,7 @@ public class ProductPersistence {
      * @param products list of products to save.
      */
     public static void saveProducts(List<Product> products) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_PATH))) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE))) {
             writer.write("id;name;description;price;category;brand;stockQuantity");
             writer.newLine();
             for (Product p : products) {
@@ -52,10 +52,11 @@ public class ProductPersistence {
      */
     public static List<Product> loadProducts() {
         List<Product> products = new ArrayList<>();
-        File file = new File(FILE_PATH);
-        if (!file.exists()) return products;
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(FILE_PATH))) {
+        File file = new File(FILE);
+        if (!file.exists()) {
+            return products;
+        }
+        try (BufferedReader reader = new BufferedReader(new FileReader(FILE))) {
             String header = reader.readLine();
             String line;
             while ((line = reader.readLine()) != null) {

@@ -38,7 +38,7 @@ public class ProductCache {
         if (products != null) {
             cacheHits++;
             System.out.println("Cache hit: " + type + " -> " + key);
-            return products;
+            return Collections.unmodifiableList(products);
         }
         cacheMisses++;
         return List.of();
@@ -53,7 +53,7 @@ public class ProductCache {
      * @param products list of products to store.
      */
     public void addToCache(String key, CacheType type, List<Product> products) {
-        cache.get(type).put(key, products);
+        cache.get(type).put(key, new ArrayList<>(products));
     }
 
     /**
