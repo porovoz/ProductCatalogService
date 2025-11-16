@@ -69,7 +69,7 @@
    java -cp out com.bestapp.com.Main
 4. **Авторизация:**
    * Username: admin
-   * Password: admin
+   * Password: password
 
 5. **При первом запуске создаётся (если отсутствует) файл products.csv.**
 
