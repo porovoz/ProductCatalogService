@@ -15,7 +15,7 @@ databaseChangeLog:
                   value: "admin"
               - column:
                   name: password_hash
-                  value: "$2a$12$6XlTgOQ1Kg7xjG7RfnPNXuwc8VNGyKb6ONyuvtQ9lR4zz9Of1mxsK"
+                  value: "$2a$12$lV7lTQdu3Elm7m3bdAAxWOs3GjvMSIYUYE7gGMqO/KF2NLakrCWdu"
               - column:
                   name: role
                   value: "ADMIN"
