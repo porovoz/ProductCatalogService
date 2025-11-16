@@ -5,14 +5,11 @@ import com.bestapp.com.cache.ProductCache;
 import com.bestapp.com.controller.AuthController;
 import com.bestapp.com.controller.ProductController;
 import com.bestapp.com.metrics.Metrics;
-import com.bestapp.com.model.Product;
-import com.bestapp.com.persistence.ProductPersistence;
 import com.bestapp.com.repository.ProductRepository;
 import com.bestapp.com.service.impl.AuthServiceImpl;
 import com.bestapp.com.service.impl.ProductServiceImpl;
 import com.bestapp.com.view.ConsoleView;
 
-import java.util.List;
 
 /**
  * Entry point of the Product Catalog Application.
@@ -31,14 +28,11 @@ public class Main {
         AuditLogger auditLogger = new AuditLogger();
         ProductRepository productRepository = new ProductRepository();
         AuthServiceImpl authService = new AuthServiceImpl();
-        ProductServiceImpl productService = new ProductServiceImpl(productRepository, auditLogger, authService);
+        ProductServiceImpl productService = new ProductServiceImpl(productRepository);
         ConsoleView consoleView = new ConsoleView();
         Metrics metrics = new Metrics();
         ProductController productController = new ProductController(productService, consoleView, auditLogger, authService, metrics);
         AuthController authController = new AuthController(authService, consoleView, auditLogger);
-
-        List<Product> loaded = ProductPersistence.loadProducts();
-        loaded.forEach(productRepository::save);
 
         boolean running = true;
         consoleView.showMessage("Welcome to Product Catalog Application!");
@@ -54,7 +48,7 @@ public class Main {
                     6. Update product
                     7. Remove product
                     8. Show cache stats
-                    9. Save & Exit
+                    9. Exit
                     """);
             String choice = consoleView.read("Choose an option: ");
             switch (choice) {
@@ -89,14 +83,13 @@ public class Main {
                 }
                 case "8" -> {
                     if (authController.requireLogin()) {
-                        ProductCache cache = productRepository.getCache();
+                        ProductCache cache = productService.getCache();
                         consoleView.showMessage("Cache hits: " + cache.getCacheHits() +
                                 ", Cache misses: " + cache.getCacheMisses());
                     }
                 }
                 case "9" -> {
-                    ProductPersistence.saveProducts(List.copyOf(productRepository.findAllUncached()));
-                    consoleView.showMessage("Products saved. Goodbye!");
+                    consoleView.showMessage("Goodbye!");
                     auditLogger.log("Application exited by " + authService.getCurrentUser());
                     running = false;
                 }

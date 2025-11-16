@@ -1,9 +1,9 @@
 package com.bestapp.com.service.impl;
 
-import com.bestapp.com.audit.AuditLogger;
+import com.bestapp.com.cache.CacheType;
+import com.bestapp.com.cache.ProductCache;
 import com.bestapp.com.model.Product;
 import com.bestapp.com.repository.ProductRepository;
-import com.bestapp.com.service.AuthService;
 import com.bestapp.com.service.ProductService;
 import lombok.RequiredArgsConstructor;
 
@@ -18,8 +18,7 @@ import java.util.List;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
-    private final AuditLogger auditLogger;
-    private final AuthService authService;
+    private final ProductCache cache = new ProductCache();
 
     /**
      * Saves a new product into the repository.
@@ -29,7 +28,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public void addProduct(Product product) {
         productRepository.save(product);
-        auditLogger.log(authService.getCurrentUser() + " added product: " + product.getName());
+        cache.clearAll();
     }
 
     /**
@@ -38,9 +37,9 @@ public class ProductServiceImpl implements ProductService {
      * @param id ID of product to delete
      */
     @Override
-    public void removeProductById(String id) {
+    public void removeProductById(Long id) {
         productRepository.deleteById(id);
-        auditLogger.log(authService.getCurrentUser() + " removed product with ID: " + id);
+        cache.clearAll();
     }
 
     /**
@@ -50,9 +49,9 @@ public class ProductServiceImpl implements ProductService {
      * @param product new product data
      */
     @Override
-    public void updateProductById(String id, Product product) {
+    public void updateProductById(Long id, Product product) {
         productRepository.updateById(id, product);
-        auditLogger.log(authService.getCurrentUser() + " updated product with ID: " + id);
+        cache.clearAll();
     }
 
     /**
@@ -62,7 +61,13 @@ public class ProductServiceImpl implements ProductService {
      */
     @Override
     public List<Product> getAllProducts() {
-        return productRepository.findAll();
+        List<Product> cached = cache.getFromCache("all", CacheType.ALL);
+        if (!cached.isEmpty()) {
+            return cached;
+        }
+        List<Product> all = productRepository.findAll();
+        cache.addToCache("all", CacheType.ALL, all);
+        return all;
     }
 
     /**
@@ -73,7 +78,13 @@ public class ProductServiceImpl implements ProductService {
      */
     @Override
     public List<Product> getByCategory(String category) {
-        return productRepository.findByCategory(category);
+        List<Product> cached = cache.getFromCache(category, CacheType.CATEGORY);
+        if (!cached.isEmpty()) {
+            return cached;
+        }
+        List<Product> result = productRepository.findByCategory(category);
+        cache.addToCache(category, CacheType.CATEGORY, result);
+        return result;
     }
 
     /**
@@ -84,7 +95,13 @@ public class ProductServiceImpl implements ProductService {
      */
     @Override
     public List<Product> getByBrand(String brand) {
-        return productRepository.findByBrand(brand);
+        List<Product> cached = cache.getFromCache(brand, CacheType.BRAND);
+        if (!cached.isEmpty()) {
+            return cached;
+        }
+        List<Product> result = productRepository.findByBrand(brand);
+        cache.addToCache(brand, CacheType.BRAND, result);
+        return result;
     }
 
     /**
@@ -96,15 +113,29 @@ public class ProductServiceImpl implements ProductService {
      */
     @Override
     public List<Product> getByPriceRange(double min, double max) {
-        return productRepository.findByPriceRange(min, max);
+        String key = min + "-" + max;
+        List<Product> cached = cache.getFromCache(key, CacheType.PRICE);
+        if (!cached.isEmpty()) {
+            return cached;
+        }
+        List<Product> result = productRepository.findByPriceRange(min, max);
+        cache.addToCache(key, CacheType.PRICE, result);
+        return result;
     }
 
     /**
      * Returns true if product exists by ID.
      */
     @Override
-    public boolean existsById(String id) {
+    public boolean existsById(Long id) {
         return productRepository.existsById(id);
+    }
+
+    /**
+     * @return cache instance.
+     */
+    public ProductCache getCache() {
+        return cache;
     }
 
 }

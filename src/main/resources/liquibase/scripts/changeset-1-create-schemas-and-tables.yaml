@@ -1,0 +1,35 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-schemas
+      author: alex
+      changes:
+        - sql:
+            sql: |
+              CREATE SCHEMA IF NOT EXISTS app_data;
+
+  - changeSet:
+      id: 002-create-sequences
+      author: alex
+      changes:
+        - createSequence:
+            sequenceName: product_seq
+            schemaName: app_data
+            startValue: 1
+            incrementBy: 1
+
+  - changeSet:
+      id: 003-create-table-products
+      author: alex
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE IF NOT EXISTS app_data.products (
+                  id BIGINT NOT NULL DEFAULT nextval('app_data.product_seq'),
+                  name VARCHAR(255) NOT NULL,
+                  description TEXT,
+                  price numeric(10,2) NOT NULL,
+                  category VARCHAR(255),
+                  brand VARCHAR(255),
+                  stock_quantity INTEGER,
+                  PRIMARY KEY(id)
+              );

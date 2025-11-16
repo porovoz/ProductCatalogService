@@ -1,0 +1,44 @@
+databaseChangeLog:
+  - changeSet:
+      id: 201-create-users-sequence
+      author: alex
+      changes:
+        - createSequence:
+            sequenceName: users_seq
+            schemaName: app_data
+            startValue: 1
+            incrementBy: 1
+
+  - changeSet:
+      id: 202-create-users-table
+      author: alex
+      changes:
+        - createTable:
+            schemaName: app_data
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+#                  defaultValueSequenceNext: '"app_data"."users_seq"'
+#                  defaValueSequenceNext: '"app_data"."users_seq"'ult
+                  defaultValueComputed: "nextval('users_seq')"
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: username
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: password_hash
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false

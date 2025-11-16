@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - include:
+      file: liquibase/scripts/changeSet-0-create-admin-schema.yaml
+  - include:
+      file: liquibase/scripts/changeset-1-create-schemas-and-tables.yaml
+  - include:
+      file: liquibase/scripts/changeset-2-insert-initial-data.yaml
+  - include:
+      file: liquibase/scripts/changeset-3-create-users.yaml
+  - include:
+      file: liquibase/scripts/changeset-4-insert-admin.yaml

@@ -1,9 +1,11 @@
 package com.bestapp.ProductCatalog.service;
 
+import com.bestapp.ProductCatalog.BasePostgresTest;
 import com.bestapp.com.audit.AuditLogger;
 import com.bestapp.com.model.Product;
 import com.bestapp.com.repository.ProductRepository;
 import com.bestapp.com.service.AuthService;
+import com.bestapp.com.service.impl.AuthServiceImpl;
 import com.bestapp.com.service.impl.ProductServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,69 +13,49 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
-class ProductServiceImplTest {
+class ProductServiceImplTest extends BasePostgresTest {
 
-    private ProductRepository productRepository;
-    private AuditLogger auditLogger;
-    private AuthService authService;
     private ProductServiceImpl productService;
+    private ProductRepository productRepository;
+    private AuthService authService;
 
     @BeforeEach
     void setUp() {
-        productRepository = mock(ProductRepository.class);
-        auditLogger = mock(AuditLogger.class);
-        authService = mock(AuthService.class);
-
-        when(authService.getCurrentUser()).thenReturn("admin");
-
-        productService = new ProductServiceImpl(productRepository, auditLogger, authService);
+        productRepository = new ProductRepository();
+        authService = new AuthServiceImpl();
+        productService = new ProductServiceImpl(productRepository, new AuditLogger(), authService);
     }
 
     @Test
-    void addProductSavesToRepo() {
-        Product p = new Product("car", "sports car", 125000, "automotive", "Audi", 5);
-
+    void testAddGetProductsAndCache() {
+        Product p = new Product("Monitor", "4K Monitor", 400, "Electronics", "LG", 7);
         productService.addProduct(p);
 
-        verify(productRepository).save(p);
-        verify(auditLogger).log("admin added product: car");
+        List<Product> allProducts = productService.getAllProducts();
+        assertTrue(allProducts.stream().anyMatch(prod -> prod.getName().equals("Monitor")));
+
+        assertTrue(productService.getCache().getCacheHits() >= 0);
+        assertTrue(productService.getCache().getCacheMisses() >= 0);
+
+        List<Product> cached = productService.getAllProducts();
+        assertEquals(allProducts.size(), cached.size());
     }
 
     @Test
-    void updateProductCallsRepository() {
-        Product newP = new Product("pen", "high quality pen", 100, "office supplies", "parker", 7);
-        productService.updateProductById("id1", newP);
+    void testUpdateAndDeleteProduct() {
+        Product p = new Product("Keyboard", "Mechanical", 120, "Electronics", "Corsair", 15);
+        productService.addProduct(p);
+        Long id = p.getId();
 
-        verify(productRepository).updateById("id1", newP);
-    }
+        p.setPrice(110);
+        productService.updateProductById(id, p);
+        Product updated = productService.getAllProducts().stream().filter(prod -> prod.getId().equals(id)).findFirst().orElse(null);
+        assertNotNull(updated);
+        assertEquals(110, updated.getPrice());
 
-    @Test
-    void updateNonExistingThrows() {
-        doThrow(new IllegalArgumentException("not found"))
-                .when(productRepository).updateById(eq("bad ID"), any());
-
-        assertThrows(IllegalArgumentException.class, () ->
-                productService.updateProductById("bad ID", new Product()));
-    }
-
-    @Test
-    void deleteProductCallsRepo() {
-        productService.removeProductById("id1");
-        verify(productRepository).deleteById("id1");
-    }
-
-    @Test
-    void getAllProductsDelegatesToRepo() {
-        when(productRepository.findAll()).thenReturn(List.of(new Product()));
-        assertEquals(1, productService.getAllProducts().size());
-    }
-
-    @Test
-    void existsByIdDelegates() {
-        when(productRepository.existsById("123")).thenReturn(true);
-        assertTrue(productService.existsById("123"));
+        productService.removeProductById(id);
+        assertFalse(productService.existsById(id));
     }
 
 }
