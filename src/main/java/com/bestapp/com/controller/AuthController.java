@@ -8,10 +8,6 @@ import lombok.RequiredArgsConstructor;
 /**
  * Controller responsible for user authentication flow:
  * login, logout and user session checks.
- *
- * <p>Uses {@link AuthService} for authentication logic,
- * {@link ConsoleView} for user I/O
- * and {@link AuditLogger} for audit entries.</p>
  */
 @RequiredArgsConstructor
 public class AuthController {

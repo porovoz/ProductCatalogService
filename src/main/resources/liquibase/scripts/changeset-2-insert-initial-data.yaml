@@ -1,0 +1,51 @@
+databaseChangeLog:
+  - changeSet:
+      id: 101-insert-initial-products
+      author: alex
+      changes:
+        - insert:
+            schemaName: app_data
+            tableName: products
+            columns:
+              - column:
+                  name: name
+                  value: "Road Bicycle"
+              - column:
+                  name: description
+                  value: "Lightweight road bicycle"
+              - column:
+                  name: price
+                  value: "799.99"
+              - column:
+                  name: category
+                  value: "Bicycles"
+              - column:
+                  name: brand
+                  value: "SpeedX"
+              - column:
+                  name: stock_quantity
+                  value: 12
+
+        - insert:
+            schemaName: app_data
+            tableName: products
+            columns:
+              - column:
+                  name: name
+                  value: "Wireless Mouse"
+              - column:
+                  name: description
+                  value: "Ergonomic wireless mouse"
+              - column:
+                  name: price
+                  value: "29.99"
+              - column:
+                  name: category
+                  value: "Electronics"
+              - column:
+                  name: brand
+                  value: "MouseCo"
+              - column:
+                  name: stock_quantity
+                  value: 50
+

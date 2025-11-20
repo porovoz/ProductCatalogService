@@ -1,108 +1,52 @@
 package com.bestapp.com;
 
 import com.bestapp.com.audit.AuditLogger;
-import com.bestapp.com.cache.ProductCache;
 import com.bestapp.com.controller.AuthController;
 import com.bestapp.com.controller.ProductController;
+import com.bestapp.com.factory.AppFactory;
+import com.bestapp.com.menu.AppMenu;
 import com.bestapp.com.metrics.Metrics;
-import com.bestapp.com.model.Product;
-import com.bestapp.com.persistence.ProductPersistence;
-import com.bestapp.com.repository.ProductRepository;
-import com.bestapp.com.service.impl.AuthServiceImpl;
-import com.bestapp.com.service.impl.ProductServiceImpl;
 import com.bestapp.com.view.ConsoleView;
 
-import java.util.List;
 
 /**
- * Entry point of the Product Catalog Application.
- * <p>
- * This class initializes all dependencies (manual dependency injection),
- * loads saved products, and provides an interactive console-based menu
- * for managing users and products.
- * </p>
+ * Entry point for the Product Catalog Application.
+ * The {@code Main} class is responsible for initializing and starting the console-based
+ * Product Catalog application. It sets up the necessary components such as controllers, views,
+ * metrics, and logging mechanisms, and then launches the application's main menu.
+ * The application allows users to manage products in a catalog, perform authentication, and
+ * view metrics related to the system's operation.
+ * This class serves as the main entry point and invokes the application's main menu to start
+ * the user interaction loop.
  */
 public class Main {
 
     /**
      * Starts the Product Catalog console application.
+     * This method is the entry point for the application. It initializes all the necessary components
+     * such as controllers, views, metrics, and logging. Once initialized, it creates an instance of
+     * the {@link AppMenu} class and invokes its {@link AppMenu#start()} method to begin the user
+     * interaction within the application.
      */
     public static void main(String[] args) {
-        AuditLogger auditLogger = new AuditLogger();
-        ProductRepository productRepository = new ProductRepository();
-        AuthServiceImpl authService = new AuthServiceImpl();
-        ProductServiceImpl productService = new ProductServiceImpl(productRepository, auditLogger, authService);
-        ConsoleView consoleView = new ConsoleView();
-        Metrics metrics = new Metrics();
-        ProductController productController = new ProductController(productService, consoleView, auditLogger, authService, metrics);
-        AuthController authController = new AuthController(authService, consoleView, auditLogger);
 
-        List<Product> loaded = ProductPersistence.loadProducts();
-        loaded.forEach(productRepository::save);
+        AppFactory appFactory = new AppFactory();
 
-        boolean running = true;
-        consoleView.showMessage("Welcome to Product Catalog Application!");
-        while (running) {
-            System.out.println("""
-                    
-                    === PRODUCT CATALOG MENU ===
-                    1. Login
-                    2. Logout
-                    3. Add product
-                    4. View products
-                    5. Search products
-                    6. Update product
-                    7. Remove product
-                    8. Show cache stats
-                    9. Save & Exit
-                    """);
-            String choice = consoleView.read("Choose an option: ");
-            switch (choice) {
-                case "1" -> authController.login();
-                case "2" -> authController.logout();
-                case "3" -> {
-                    if (authController.requireLogin()) {
-                        productController.addProduct();
-                    }
-                }
-                case "4" -> {
-                    if (authController.requireLogin()) {
-                        productController.viewProducts();
-                    }
-                }
-                case "5" -> {
-                    if (authController.requireLogin()) {
-                    metrics.start();
-                    productController.searchProducts();
-                    consoleView.showMessage("Search completed in " + metrics.getElapsedTime() + " ms.");
-                    }
-                }
-                case "6" -> {
-                    if (authController.requireLogin()) {
-                        productController.updateProduct();
-                    }
-                }
-                case "7" -> {
-                    if (authController.requireLogin()) {
-                        productController.deleteProduct();
-                    }
-                }
-                case "8" -> {
-                    if (authController.requireLogin()) {
-                        ProductCache cache = productRepository.getCache();
-                        consoleView.showMessage("Cache hits: " + cache.getCacheHits() +
-                                ", Cache misses: " + cache.getCacheMisses());
-                    }
-                }
-                case "9" -> {
-                    ProductPersistence.saveProducts(List.copyOf(productRepository.findAllUncached()));
-                    consoleView.showMessage("Products saved. Goodbye!");
-                    auditLogger.log("Application exited by " + authService.getCurrentUser());
-                    running = false;
-                }
-                default -> consoleView.showMessage("Invalid menu option! Try again.");
-            }
-        }
+        ProductController productController = appFactory.createProductController();
+        AuthController authController = appFactory.createAuthController();
+        ConsoleView consoleView = appFactory.getConsoleView();
+        Metrics metrics = appFactory.getMetrics();
+        AuditLogger auditLogger = appFactory.getAuditLogger();
+
+        AppMenu appMenu = new AppMenu(
+                authController,
+                productController,
+                consoleView,
+                metrics,
+                auditLogger,
+                appFactory.getAuthService());
+
+        appMenu.start();
     }
 
 }

@@ -1,5 +1,6 @@
 package com.bestapp.com.service;
 
+import com.bestapp.com.cache.ProductCache;
 import com.bestapp.com.model.Product;
 
 import java.util.List;
@@ -17,12 +18,12 @@ public interface ProductService {
     /**
      * Updates an existing product by ID.
      */
-    void updateProductById(String id, Product product);
+    void updateProductById(Long id, Product product);
 
     /**
      * Removes a product by ID.
      */
-    void removeProductById(String id);
+    void removeProductById(Long id);
 
     /**
      * Returns all products.
@@ -47,6 +48,8 @@ public interface ProductService {
     /**
      * Checks whether a product with a given ID exists.
      */
-    boolean existsById(String id);
+    boolean existsById(Long id);
+
+    ProductCache getCache();
 
 }

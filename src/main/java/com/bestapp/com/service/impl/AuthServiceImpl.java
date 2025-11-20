@@ -1,26 +1,23 @@
 package com.bestapp.com.service.impl;
 
+import com.bestapp.com.config.DatabaseConfig;
+import com.bestapp.com.model.User;
+import com.bestapp.com.repository.UserRepository;
 import com.bestapp.com.service.AuthService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Optional;
 
 /**
- * Simple in-memory user authentication.
- * Stores username->password pairs and tracks the current logged-in user.
+ * Simple user authentication.
  */
+@RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    private final Map<String, String> users = new HashMap<>();
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
+    private final UserRepository userRepository = new UserRepository(new DatabaseConfig());
     private String currentUser = null;
-
-    /**
-     * Initializes the authentication with a couple of demo users.
-     */
-    public AuthServiceImpl() {
-        users.put("admin", "admin");
-        users.put("user1", "password1");
-    }
 
     /**
      * Attempts to log in with given credentials.
@@ -34,12 +31,14 @@ public class AuthServiceImpl implements AuthService {
         if (username == null || password == null) {
             return false;
         }
-        String expected = users.get(username);
-        if (expected != null && expected.equals(password)) {
-            currentUser = username;
-            return true;
+        Optional<User> maybeUser = userRepository.findByUsername(username);
+        if (maybeUser.isEmpty()) return false;
+        User user = maybeUser.get();
+        boolean matches = passwordEncoder.matches(password, user.getPasswordHash());
+        if (matches) {
+            currentUser = user.getUsername();
         }
-        return false;
+        return matches;
     }
 
     /**

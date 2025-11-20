@@ -1,6 +1,7 @@
 package com.bestapp.com.controller;
 
 import com.bestapp.com.audit.AuditLogger;
+import com.bestapp.com.cache.ProductCache;
 import com.bestapp.com.metrics.Metrics;
 import com.bestapp.com.model.Product;
 import com.bestapp.com.service.AuthService;
@@ -12,7 +13,6 @@ import java.util.List;
 
 /**
  * Controller responsible for handling all product-related user interactions.
- * Delegates business logic to {@link ProductService} and handles input/output via {@link ConsoleView}.
  */
 @RequiredArgsConstructor
 public class ProductController {
@@ -27,7 +27,7 @@ public class ProductController {
      * Prompts the user for product details and adds a new product to the catalog.
      */
     public void addProduct() {
-        String name = consoleView.read("Enter product name: ");
+        String name = consoleView.readNonEmptyText("Enter product name: ");
         String desc = consoleView.read("Enter product description: ");
         double price = consoleView.readPositiveDouble("Enter product price: ");
         String cat = consoleView.read("Enter product category: ");
@@ -78,35 +78,54 @@ public class ProductController {
      * Updates an existing product by ID after verifying its existence.
      */
     public void updateProduct() {
-        String id = consoleView.read("Enter product ID to update: ");
-        if (!productService.existsById(id)) {
-            consoleView.showMessage("Product with ID: " + id + " not found.");
-            return;
+        String strId = consoleView.read("Enter product ID to update: ");
+        try {
+            Long id = Long.parseLong(strId);
+            if (!productService.existsById(id)) {
+                consoleView.showMessage("Product with ID: " + id + " not found.");
+                return;
+            }
+            String name = consoleView.read("Enter new product name: ");
+            String desc = consoleView.read("Enter new product description: ");
+            double price = consoleView.readPositiveDouble("Enter new product price: ");
+            String cat = consoleView.read("Enter new product category: ");
+            String brand = consoleView.read("Enter new product brand: ");
+            int qty = consoleView.readPositiveInt("Enter new product quantity: ");
+            Product p = new Product(name, desc, price, cat, brand, qty);
+            productService.updateProductById(id, p);
+            auditLogger.log(authService.getCurrentUser() + " updated the product with ID: " + id);
+            consoleView.showMessage("Product updated successfully.");
+        } catch (NumberFormatException e) {
+            consoleView.showMessage("Invalid ID format.");
         }
-        String name = consoleView.read("Enter new product name: ");
-        String desc = consoleView.read("Enter new product description: ");
-        double price = consoleView.readPositiveDouble("Enter new product price: ");
-        String cat = consoleView.read("Enter new product category: ");
-        String brand = consoleView.read("Enter new product brand: ");
-        int qty = consoleView.readPositiveInt("Enter new product quantity: ");
-        Product p = new Product(name, desc, price, cat, brand, qty);
-        productService.updateProductById(id, p);
-        auditLogger.log(authService.getCurrentUser() + " updated the product with ID: " + id);
-        consoleView.showMessage("Product updated successfully.");
     }
 
     /**
      * Deletes a product by ID after verifying that it exists.
      */
     public void deleteProduct() {
-        String id = consoleView.read("Enter product ID to delete: ");
-        if (!productService.existsById(id)) {
-            consoleView.showMessage("Product with ID: " + id + " not found.");
-            return;
+        String strId = consoleView.read("Enter product ID to delete: ");
+        try {
+            Long id = Long.parseLong(strId);
+            if (!productService.existsById(id)) {
+                consoleView.showMessage("Product with ID: " + id + " not found.");
+                return;
+            }
+            productService.removeProductById(id);
+            auditLogger.log(authService.getCurrentUser() + " deleted the product with ID: " + id);
+            consoleView.showMessage("Product deleted successfully.");
+        } catch (NumberFormatException e) {
+            consoleView.showMessage("Invalid ID format.");
         }
-        productService.removeProductById(id);
-        auditLogger.log(authService.getCurrentUser() + " deleted the product with ID: " + id);
-        consoleView.showMessage("Product deleted successfully.");
+    }
+
+    /**
+     * Shows cache statistics.
+     */
+    public void showCacheStats() {
+        ProductCache cache = productService.getCache();
+        consoleView.showMessage("Cache hits: " + cache.getCacheHits() +
+                ", Cache misses: " + cache.getCacheMisses());
     }
 
 }

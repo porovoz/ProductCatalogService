@@ -1,13 +1,10 @@
 package com.bestapp.com.repository;
 
-import com.bestapp.com.cache.CacheType;
-import com.bestapp.com.cache.ProductCache;
+import com.bestapp.com.config.DatabaseConfig;
 import com.bestapp.com.model.Product;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.sql.*;
+import java.util.*;
 
 /**
  * Represents the product repository.
@@ -17,41 +14,62 @@ import java.util.Map;
  */
 public class ProductRepository {
 
-    private final Map<String, Product> products = new LinkedHashMap<>();
-    private final ProductCache cache = new ProductCache();
+    private final Connection connection;
+
+    public ProductRepository(DatabaseConfig databaseConfig) {
+        this.connection = databaseConfig.createConnectionWithMigrations();
+    }
 
     /**
      * Saves a new product to the repository.
-     * <p>
-     * Clears all cached data after modification.
-     * </p>
      *
      * @param product new product to add
      */
     public void save(Product product) {
-        products.put(product.getId(), product);
-        cache.clearAll();
+        String sql = ProductRepositorySql.INSERT_PRODUCT.getQuery();
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, product.getName());
+            preparedStatement.setString(2, product.getDescription());
+            preparedStatement.setDouble(3, product.getPrice());
+            preparedStatement.setString(4, product.getCategory());
+            preparedStatement.setString(5, product.getBrand());
+            preparedStatement.setInt(6, product.getStockQuantity());
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    long id = resultSet.getLong("id");
+                    product.setId(id);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to save product: " + e.getMessage(), e);
+        }
     }
 
     /**
-     * Updates an existing product by ID using {@link Map#computeIfPresent(Object, java.util.function.BiFunction)}.
-     * New product receives old id and the cache is invalidated for related keys.
-     * <p>
+     * Updates an existing product by ID.
      * If the ID is not found, an exception is thrown.
      * </p>
      *
      * @param id         product ID to update
-     * @param newProduct new product data
+     * @param product new product data
      * @throws IllegalArgumentException if the product does not exist
      */
-    public void updateById(String id, Product newProduct) {
-        boolean updated = products.computeIfPresent(id, (key, old) -> {
-            newProduct.setId(id);
-            cache.clearAll();
-            return newProduct;
-        }) != null;
-        if (!updated) {
-            throw new IllegalArgumentException("Product with ID " + id + " not found.");
+    public void updateById(Long id, Product product) {
+        String sql = ProductRepositorySql.UPDATE_PRODUCT_BY_ID.getQuery();
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, product.getName());
+            preparedStatement.setString(2, product.getDescription());
+            preparedStatement.setDouble(3, product.getPrice());
+            preparedStatement.setString(4, product.getCategory());
+            preparedStatement.setString(5, product.getBrand());
+            preparedStatement.setInt(6, product.getStockQuantity());
+            preparedStatement.setLong(7, id);
+            int updated = preparedStatement.executeUpdate();
+            if (updated == 0) {
+                throw new IllegalArgumentException("Product with ID " + id + " not found.");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to update product: " + e.getMessage(), e);
         }
     }
 
@@ -61,116 +79,126 @@ public class ProductRepository {
      * @param id ID of the product to remove
      * @throws IllegalArgumentException if the product is not found
      */
-    public void deleteById(String id) {
-        Product removed = products.remove(id);
-        if (removed != null) {
-            cache.clearAll();
-        } else {
-            throw new IllegalArgumentException("Product with ID " + id + " not found.");
+    public void deleteById(Long id) {
+        String sql = ProductRepositorySql.DELETE_PRODUCT_BY_ID.getQuery();
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setLong(1, id);
+            int deleted = preparedStatement.executeUpdate();
+            if (deleted == 0) {
+                throw new IllegalArgumentException("Product with ID " + id + " not found.");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to delete product: " + e.getMessage(), e);
         }
     }
+
 
     /**
      * Returns all products in the repository.
-     * <p>
-     * Uses caching for faster access on repeated calls.
-     * </p>
-     *
      * @return list of all products
      */
     public List<Product> findAll() {
-        List<Product> cached = cache.getFromCache("all", CacheType.ALL);
-        if (!cached.isEmpty()) {
-            return cached;
+        List<Product> list = new ArrayList<>();
+        String sql = ProductRepositorySql.SELECT_ALL_PRODUCTS.getQuery();
+        try (Statement statement = connection.createStatement();
+             ResultSet rs = statement.executeQuery(sql)) {
+            while (rs.next()) {
+                Product product = mapRow(rs);
+                list.add(product);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to fetch products: " + e.getMessage(), e);
         }
-        List<Product> all = new ArrayList<>(products.values());
-        cache.addToCache("all", CacheType.ALL, all);
-        return all;
-    }
-
-    /**
-     * @return uncached list of products (used for persistence).
-     * */
-    public List<Product> findAllUncached() {
-        return new ArrayList<>(products.values());
+        return list;
     }
 
     /**
      * Searches products by category.
      *
      * @param category category name
-     * @return list of matching products or empty list
+     * @return list of matching products
      */
     public List<Product> findByCategory(String category) {
-        List<Product> cached = cache.getFromCache(category, CacheType.CATEGORY);
-        if (!cached.isEmpty()) {
-            return cached;
+        List<Product> list = new ArrayList<>();
+        String sql = ProductRepositorySql.SELECT_BY_CATEGORY.getQuery();
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, category);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) list.add(mapRow(resultSet));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
-        List<Product> result = products.values().stream()
-                .filter(p -> p.getCategory() != null && p.getCategory().equalsIgnoreCase(category))
-                .toList();
-        if (result.isEmpty()) {
-            System.out.println("No products found in category: " + category);
-        }
-        cache.addToCache(category, CacheType.CATEGORY, result);
-        return result;
+        return list;
     }
 
     /**
      * Searches products by brand.
      *
      * @param brand brand name
-     * @return list of matching products or empty list
+     * @return list of matching products
      */
     public List<Product> findByBrand(String brand) {
-        List<Product> cached = cache.getFromCache(brand, CacheType.BRAND);
-        if (!cached.isEmpty()) {
-            return cached;
+        List<Product> list = new ArrayList<>();
+        String sql = ProductRepositorySql.SELECT_BY_BRAND.getQuery();
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, brand);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) list.add(mapRow(resultSet));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
-        List<Product> result = products.values().stream()
-                .filter(p -> p.getBrand() != null && p.getBrand().equalsIgnoreCase(brand))
-                .toList();
-        if (result.isEmpty()) {
-            System.out.println("No products found for brand: " + brand);
-        }
-        cache.addToCache(brand, CacheType.BRAND, result);
-        return result;
+        return list;
     }
 
     /**
      * Searches products within a price range.
      *
-     * @param minPrice minimum price (inclusive)
-     * @param maxPrice maximum price (inclusive)
-     * @return list of products within range or empty list
+     * @param min minimum price (inclusive)
+     * @param max maximum price (inclusive)
+     * @return list of products within range
      */
-    public List<Product> findByPriceRange(double minPrice, double maxPrice) {
-        String key = minPrice + "-" + maxPrice;
-        List<Product> cached = cache.getFromCache(key, CacheType.PRICE);
-        if (!cached.isEmpty()) {
-            return cached;
+    public List<Product> findByPriceRange(double min, double max) {
+        List<Product> list = new ArrayList<>();
+        String sql = ProductRepositorySql.SELECT_BY_PRICE_RANGE.getQuery();
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setDouble(1, min);
+            preparedStatement.setDouble(2, max);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) list.add(mapRow(resultSet));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
-        List<Product> result = products.values().stream()
-                .filter(p -> p.getPrice() >= minPrice && p.getPrice() <= maxPrice)
-                .toList();
-        if (result.isEmpty()) {
-            System.out.println("No products found in price range: " + minPrice + " - " + maxPrice);
-        }
-        cache.addToCache(key, CacheType.PRICE, result);
-        return result;
-    }
-
-    /**
-     * @return cache instance.
-     */
-    public ProductCache getCache() {
-        return cache;
+        return list;
     }
 
     /**
      * @return true if a product exists by ID.
      */
-    public boolean existsById(String id) {
-        return products.containsKey(id);
+    public boolean existsById(Long id) {
+        String sql = ProductRepositorySql.SELECT_EXISTS_BY_ID.getQuery();
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setLong(1, id);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                return resultSet.next();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Product mapRow(ResultSet resultSet) throws SQLException {
+        Product product = new Product(
+                resultSet.getString("name"),
+                resultSet.getString("description"),
+                resultSet.getDouble("price"),
+                resultSet.getString("category"),
+                resultSet.getString("brand"),
+                resultSet.getInt("stock_quantity")
+        );
+        product.setId(resultSet.getLong("id"));
+        return product;
     }
 }

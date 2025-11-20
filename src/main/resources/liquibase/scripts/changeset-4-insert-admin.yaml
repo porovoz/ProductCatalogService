@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: 301-insert-admin
+      author: alex
+      changes:
+        - insert:
+            schemaName: app_data
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  valueNumeric: 1
+              - column:
+                  name: username
+                  value: "admin"
+              - column:
+                  name: password_hash
+                  value: "$2a$12$lV7lTQdu3Elm7m3bdAAxWOs3GjvMSIYUYE7gGMqO/KF2NLakrCWdu"
+              - column:
+                  name: role
+                  value: "ADMIN"

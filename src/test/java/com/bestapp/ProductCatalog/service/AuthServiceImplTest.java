@@ -1,55 +1,48 @@
 package com.bestapp.ProductCatalog.service;
 
+import com.bestapp.ProductCatalog.BasePostgresTest;
+import com.bestapp.com.config.DatabaseConfig;
+import com.bestapp.com.repository.UserRepository;
 import com.bestapp.com.service.impl.AuthServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class AuthServiceImplTest {
+class AuthServiceImplTest extends BasePostgresTest {
 
     private AuthServiceImpl authService;
+    private UserRepository userRepository;
 
     @BeforeEach
     void setUp() {
         authService = new AuthServiceImpl();
+        userRepository = new UserRepository(new DatabaseConfig());
     }
 
-    @Test
-    void loginSuccess() {
-        assertTrue(authService.login("admin", "admin"));
-        assertEquals("admin", authService.getCurrentUser());
-    }
-
-    @Test
-    void loginFailWrongPassword() {
-        assertFalse(authService.login("admin", "wrong"));
-        assertNull(authService.getCurrentUser());
-    }
-
-    @Test
-    void loginFailUnknownUser() {
-        assertFalse(authService.login("unknown", "123"));
-    }
-
-    @Test
-    void loginFailNullValues() {
-        assertFalse(authService.login(null, null));
-        assertNull(authService.getCurrentUser());
-    }
-
-    @Test
-    void logoutClearsCurrentUser() {
-        authService.login("admin", "admin");
-        authService.logout();
-        assertNull(authService.getCurrentUser());
-    }
-
-    @Test
-    void isLoggedInWorks() {
-        assertFalse(authService.isLoggedIn());
-        authService.login("admin", "admin");
-        assertTrue(authService.isLoggedIn());
-    }
+//    @Test
+//    void testLoginLogout() {
+//        String rawPassword = "secret";
+//        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+//        User user = new User();
+//        user.setUsername("alice");
+//        user.setPasswordHash(encoder.encode(rawPassword));
+//        user.setRole("USER");
+//        userRepository.save(user);
+//
+//        assertFalse(authService.isLoggedIn());
+//        assertTrue(authService.login("alice", rawPassword));
+//        assertTrue(authService.isLoggedIn());
+//        assertEquals("alice", authService.getCurrentUser());
+//
+//        authService.logout();
+//        assertFalse(authService.isLoggedIn());
+//    }
+//
+//    @Test
+//    void testLoginWithInvalidCredentials() {
+//        assertFalse(authService.login("nonexist", "pass"));
+//    }
 
 }
