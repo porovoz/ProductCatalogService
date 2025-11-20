@@ -1,6 +1,7 @@
 package com.bestapp.com.controller;
 
 import com.bestapp.com.audit.AuditLogger;
+import com.bestapp.com.cache.ProductCache;
 import com.bestapp.com.metrics.Metrics;
 import com.bestapp.com.model.Product;
 import com.bestapp.com.service.AuthService;
@@ -12,7 +13,6 @@ import java.util.List;
 
 /**
  * Controller responsible for handling all product-related user interactions.
- * Delegates business logic to {@link ProductService} and handles input/output via {@link ConsoleView}.
  */
 @RequiredArgsConstructor
 public class ProductController {
@@ -117,6 +117,15 @@ public class ProductController {
         } catch (NumberFormatException e) {
             consoleView.showMessage("Invalid ID format.");
         }
+    }
+
+    /**
+     * Shows cache statistics.
+     */
+    public void showCacheStats() {
+        ProductCache cache = productService.getCache();
+        consoleView.showMessage("Cache hits: " + cache.getCacheHits() +
+                ", Cache misses: " + cache.getCacheMisses());
     }
 
 }

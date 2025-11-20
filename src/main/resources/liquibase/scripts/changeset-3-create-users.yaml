@@ -20,8 +20,6 @@ databaseChangeLog:
               - column:
                   name: id
                   type: BIGINT
-#                  defaultValueSequenceNext: '"app_data"."users_seq"'
-#                  defaValueSequenceNext: '"app_data"."users_seq"'ult
                   defaultValueComputed: "nextval('users_seq')"
                   constraints:
                     nullable: false

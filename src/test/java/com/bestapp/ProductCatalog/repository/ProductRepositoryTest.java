@@ -1,6 +1,7 @@
 package com.bestapp.ProductCatalog.repository;
 
 import com.bestapp.ProductCatalog.BasePostgresTest;
+import com.bestapp.com.config.DatabaseConfig;
 import com.bestapp.com.model.Product;
 import com.bestapp.com.repository.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,7 +17,7 @@ class ProductRepositoryTest extends BasePostgresTest {
 
     @BeforeEach
     void setUp() {
-        productRepository = new ProductRepository();
+        productRepository = new ProductRepository(new DatabaseConfig());
     }
 
     @Test

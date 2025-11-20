@@ -41,15 +41,15 @@
 
 ## Технологии
 
-| Компонент | Используемая технология |
-|------------|------------------------|
-| Язык | Java 17+ |
-| Хранение данных | CSV-файл (`products.csv`) |
-| Коллекции | Map, List, EnumMap, LinkedHashMap |
+| Компонент | Используемая технология                        |
+|------------|------------------------------------------------|
+| Язык | Java 17+                                       |
+| Хранение данных | PostgreSQL                                     |
+| Коллекции | Map, List, EnumMap, LinkedHashMap              |
 | Кеширование | EnumMap<CacheType, Map<String, List<Product>>> |
-| Метрики | System.currentTimeMillis |
-| Авторизация | In-memory (Map<String, String>) |
-| Логирование | Консольное (AuditLogger) |
+| Метрики | System.currentTimeMillis                       |
+| Авторизация | PostgreSQL                                     |
+| Логирование | Консольное (AuditLogger)                       |
 
 ---
 
@@ -83,7 +83,7 @@
 - Предустановленные пользователи:
 
     - admin / admin
-    - user1 / password1
+    - user1 / password
 
 ### Управление товарами
 
@@ -133,10 +133,4 @@
 - Количество товаров в каталоге
 
 - Количество cache hits/misses
-
-### Формат хранения данных
-
-Файл products.csv хранится в корне проекта и имеет структуру:
-```bash
-id;name;description;price;category;brand;stockQuantity
 

@@ -1,5 +1,6 @@
 package com.bestapp.com.service.impl;
 
+import com.bestapp.com.config.DatabaseConfig;
 import com.bestapp.com.model.User;
 import com.bestapp.com.repository.UserRepository;
 import com.bestapp.com.service.AuthService;
@@ -9,14 +10,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import java.util.Optional;
 
 /**
- * Simple in-memory user authentication.
- * Stores username->password pairs and tracks the current logged-in user.
+ * Simple user authentication.
  */
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
-    private final UserRepository userRepository = new UserRepository();
+    private final UserRepository userRepository = new UserRepository(new DatabaseConfig());
     private String currentUser = null;
 
     /**

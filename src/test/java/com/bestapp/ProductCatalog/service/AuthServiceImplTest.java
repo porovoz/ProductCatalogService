@@ -1,7 +1,7 @@
 package com.bestapp.ProductCatalog.service;
 
 import com.bestapp.ProductCatalog.BasePostgresTest;
-import com.bestapp.com.model.User;
+import com.bestapp.com.config.DatabaseConfig;
 import com.bestapp.com.repository.UserRepository;
 import com.bestapp.com.service.impl.AuthServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,7 +18,7 @@ class AuthServiceImplTest extends BasePostgresTest {
     @BeforeEach
     void setUp() {
         authService = new AuthServiceImpl();
-        userRepository = new UserRepository();
+        userRepository = new UserRepository(new DatabaseConfig());
     }
 
 //    @Test

@@ -15,8 +15,9 @@ import java.util.Optional;
 public class UserRepository {
 
     private final Connection connection;
-    public UserRepository() {
-        this.connection = DatabaseConfig.getConnection();
+
+    public UserRepository(DatabaseConfig databaseConfig) {
+        this.connection = databaseConfig.createConnectionWithMigrations();
     }
 
     /**
@@ -26,7 +27,7 @@ public class UserRepository {
      * @return user of matching name
      */
     public Optional<User> findByUsername(String username) {
-        String sql = "SELECT id, username, password_hash, role FROM app_data.users WHERE username = ?";
+        String sql = UserRepositorySql.SELECT_BY_USERNAME.getQuery();
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, username);
             try (ResultSet rs = ps.executeQuery()) {
@@ -51,7 +52,7 @@ public class UserRepository {
      * @param user new user to add
      */
     public void save(User user) {
-        String sql = "INSERT INTO app_data.users (username, password_hash, role) VALUES (?, ?, ?) RETURNING id";
+        String sql = UserRepositorySql.INSERT_USER.getQuery();
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, user.getUsername());
             ps.setString(2, user.getPasswordHash());

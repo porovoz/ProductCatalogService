@@ -16,8 +16,8 @@ public class ProductRepository {
 
     private final Connection connection;
 
-    public ProductRepository() {
-        this.connection = DatabaseConfig.getConnection();
+    public ProductRepository(DatabaseConfig databaseConfig) {
+        this.connection = databaseConfig.createConnectionWithMigrations();
     }
 
     /**
@@ -26,8 +26,7 @@ public class ProductRepository {
      * @param product new product to add
      */
     public void save(Product product) {
-        String sql = "INSERT INTO app_data.products (name, description, price, category, brand, stock_quantity) " +
-                "VALUES (?, ?, ?, ?, ?, ?) RETURNING id";
+        String sql = ProductRepositorySql.INSERT_PRODUCT.getQuery();
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setString(1, product.getName());
             preparedStatement.setString(2, product.getDescription());
@@ -56,7 +55,7 @@ public class ProductRepository {
      * @throws IllegalArgumentException if the product does not exist
      */
     public void updateById(Long id, Product product) {
-        String sql = "UPDATE app_data.products SET name=?, description=?, price=?, category=?, brand=?, stock_quantity=? WHERE id=?";
+        String sql = ProductRepositorySql.UPDATE_PRODUCT_BY_ID.getQuery();
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setString(1, product.getName());
             preparedStatement.setString(2, product.getDescription());
@@ -81,7 +80,7 @@ public class ProductRepository {
      * @throws IllegalArgumentException if the product is not found
      */
     public void deleteById(Long id) {
-        String sql = "DELETE FROM app_data.products WHERE id=?";
+        String sql = ProductRepositorySql.DELETE_PRODUCT_BY_ID.getQuery();
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setLong(1, id);
             int deleted = preparedStatement.executeUpdate();
@@ -100,7 +99,7 @@ public class ProductRepository {
      */
     public List<Product> findAll() {
         List<Product> list = new ArrayList<>();
-        String sql = "SELECT id, name, description, price, category, brand, stock_quantity FROM app_data.products ORDER BY id";
+        String sql = ProductRepositorySql.SELECT_ALL_PRODUCTS.getQuery();
         try (Statement statement = connection.createStatement();
              ResultSet rs = statement.executeQuery(sql)) {
             while (rs.next()) {
@@ -121,7 +120,7 @@ public class ProductRepository {
      */
     public List<Product> findByCategory(String category) {
         List<Product> list = new ArrayList<>();
-        String sql = "SELECT id, name, description, price, category, brand, stock_quantity FROM app_data.products WHERE LOWER(category)=LOWER(?)";
+        String sql = ProductRepositorySql.SELECT_BY_CATEGORY.getQuery();
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setString(1, category);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -141,7 +140,7 @@ public class ProductRepository {
      */
     public List<Product> findByBrand(String brand) {
         List<Product> list = new ArrayList<>();
-        String sql = "SELECT id, name, description, price, category, brand, stock_quantity FROM app_data.products WHERE LOWER(brand)=LOWER(?)";
+        String sql = ProductRepositorySql.SELECT_BY_BRAND.getQuery();
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setString(1, brand);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -162,7 +161,7 @@ public class ProductRepository {
      */
     public List<Product> findByPriceRange(double min, double max) {
         List<Product> list = new ArrayList<>();
-        String sql = "SELECT id, name, description, price, category, brand, stock_quantity FROM app_data.products WHERE price BETWEEN ? AND ?";
+        String sql = ProductRepositorySql.SELECT_BY_PRICE_RANGE.getQuery();
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setDouble(1, min);
             preparedStatement.setDouble(2, max);
@@ -179,7 +178,7 @@ public class ProductRepository {
      * @return true if a product exists by ID.
      */
     public boolean existsById(Long id) {
-        String sql = "SELECT 1 FROM app_data.products WHERE id=?";
+        String sql = ProductRepositorySql.SELECT_EXISTS_BY_ID.getQuery();
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setLong(1, id);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
