@@ -1,0 +1,14 @@
+<!DOCTYPE aspectj PUBLIC
+        "-//AspectJ//DTD//EN"
+        "https://www.eclipse.org/aspectj/dtd/aspectj.dtd">
+
+<aspectj>
+    <aspects>
+        <aspect name="com.bestapp.com.aspect.AuditAspect"/>
+        <aspect name="com.bestapp.com.aspect.PerformanceLoggingAspect"/>
+    </aspects>
+
+    <weaver options="-verbose -showWeaveInfo">
+        <include within="com.bestapp.com..*"/>
+    </weaver>
+</aspectj>

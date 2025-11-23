@@ -1,13 +1,8 @@
 package com.bestapp.com;
 
-import com.bestapp.com.audit.AuditLogger;
-import com.bestapp.com.controller.AuthController;
-import com.bestapp.com.controller.ProductController;
-import com.bestapp.com.factory.AppFactory;
-import com.bestapp.com.menu.AppMenu;
-import com.bestapp.com.metrics.Metrics;
-import com.bestapp.com.view.ConsoleView;
-
+import java.io.File;
+import java.net.URL;
+import java.net.URLClassLoader;
 
 /**
  * Entry point for the Product Catalog Application.
@@ -21,32 +16,67 @@ import com.bestapp.com.view.ConsoleView;
  */
 public class Main {
 
-    /**
-     * Starts the Product Catalog console application.
-     * This method is the entry point for the application. It initializes all the necessary components
-     * such as controllers, views, metrics, and logging. Once initialized, it creates an instance of
-     * the {@link AppMenu} class and invokes its {@link AppMenu#start()} method to begin the user
-     * interaction within the application.
-     */
-    public static void main(String[] args) {
+    //    /**
+//     * Starts the Product Catalog console application.
+//     * This method is the entry point for the application. It initializes all the necessary components
+//     * such as controllers, views, metrics, and logging. Once initialized, it creates an instance of
+//     * the {@link AppMenu} class and invokes its {@link AppMenu#start()} method to begin the user
+//     * interaction within the application.
+//     */
+    public static void main(String[] args) throws Exception {
 
-        AppFactory appFactory = new AppFactory();
+//        AppFactory appFactory = new AppFactory();
+//
+//        ProductController productController = appFactory.createProductController();
+//        AuthController authController = appFactory.createAuthController();
+//        ConsoleView consoleView = appFactory.getConsoleView();
+//        Metrics metrics = appFactory.getMetrics();
+//        AuditLogger auditLogger = appFactory.getAuditLogger();
+//
+//        AppMenu appMenu = new AppMenu(
+//                authController,
+//                productController,
+//                consoleView,
+//                metrics,
+//                auditLogger,
+//                appFactory.getAuthService());
+//
+//        appMenu.start();
 
-        ProductController productController = appFactory.createProductController();
-        AuthController authController = appFactory.createAuthController();
-        ConsoleView consoleView = appFactory.getConsoleView();
-        Metrics metrics = appFactory.getMetrics();
-        AuditLogger auditLogger = appFactory.getAuditLogger();
 
-        AppMenu appMenu = new AppMenu(
-                authController,
-                productController,
-                consoleView,
-                metrics,
-                auditLogger,
-                appFactory.getAuthService());
-
-        appMenu.start();
+//        int port = 8080;
+//        String contextPath = "";
+//        String webappDirLocation = "src/main/webapp/";
+//
+//        // Включаем AspectJ LTW через системное свойство
+//        System.setProperty("org.aspectj.weaver.loadtime.configuration", "META-INF/aop.xml");
+//
+//        Tomcat tomcat = new Tomcat();
+//        tomcat.setPort(port);
+//
+//        // Создаем контекст
+//        Context ctx = tomcat.addWebapp(contextPath, new File(webappDirLocation).getAbsolutePath());
+//
+//        // Настраиваем ресурсы для /WEB-INF/classes
+//        StandardRoot resources = new StandardRoot(ctx);
+//        File additionWebInfClasses = new File("target/classes");
+//        resources.addPreResources(new DirResourceSet(
+//                resources,
+//                "/WEB-INF/classes",
+//                additionWebInfClasses.getAbsolutePath(),
+//                "/"
+//        ));
+//        ctx.setResources(resources);
+//
+//        // Устанавливаем WebappLoader (Tomcat 11)
+//        org.apache.catalina.loader.WebappLoader loader = new org.apache.catalina.loader.WebappLoader();
+//        loader.setLoaderClass("org.apache.catalina.loader.WebappLoader"); // имя класса загрузчика
+//        ctx.setLoader(loader);
+//
+//        // Запускаем Tomcat
+//        tomcat.start();
+//        System.out.println("Tomcat started at http://localhost:" + port);
+//        tomcat.getServer().await();
     }
 
 }
