@@ -1,6 +1,5 @@
 package com.bestapp.com.aspect;
 
-import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Aspect;
@@ -12,11 +11,11 @@ import java.util.Arrays;
 @Aspect
 public class AuditAspect {
 
-    // Определяем точку среза для всех методов, связанных с продуктами
+    // Defining pointcut for all product-related methods
     @Pointcut("execution(* com.bestapp.com.service.impl.ProductServiceImpl.*(..))")
     public void productServiceMethods() {}
 
-    // Логируем действия пользователя до выполнения метода
+    // Logging user actions before method execution
     @Before("productServiceMethods()")
     public void logBefore(JoinPoint joinPoint) {
         String methodName = joinPoint.getSignature().getName();
@@ -25,11 +24,11 @@ public class AuditAspect {
         System.out.println("Audit log: User performed action - " + methodName + " with parameters: " + Arrays.toString(args));
     }
 
-    // Логируем выполнение метода
+    // Method execution logging
     @After("productServiceMethods()")
     public void logAfter(JoinPoint joinPoint) {
         String methodName = joinPoint.getSignature().getName();
-        // Логируем завершение действия
+        // Completing action logging
         System.out.println("Audit log: Action " + methodName + " completed successfully.");
     }
 

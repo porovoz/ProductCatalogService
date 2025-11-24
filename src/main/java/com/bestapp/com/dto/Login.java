@@ -4,6 +4,10 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+/**
+ * {@code Login} is a DTO (Data Transfer Object) used to encapsulate the login credentials
+ * submitted by a user during authentication.
+ */
 @Data
 public class Login {
 

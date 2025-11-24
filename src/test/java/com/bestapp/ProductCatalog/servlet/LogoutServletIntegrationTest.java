@@ -25,15 +25,12 @@ class LogoutServletIntegrationTest {
 
     @BeforeAll
     static void setup() throws Exception {
-        // Запуск встроенного Tomcat
         tomcat = new Tomcat();
         tomcat.setPort(8080);
 
-        // Указываем каталог веб-приложения
         String webappDir = new File("src/main/webapp").getAbsolutePath();
-        Context ctx = tomcat.addContext("", webappDir);
+        tomcat.addContext("", webappDir);
 
-        // Добавляем конфигурацию сервера
         tomcat.start();
     }
 
@@ -46,29 +43,22 @@ class LogoutServletIntegrationTest {
 
     @Test
     void testLogoutSuccess() throws IOException, ParseException {
-        // Подготовка для успешного выхода (пользователь уже авторизован)
-
-        // Создаем сессию (эмулируем, что пользователь авторизован)
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            // Создаем POST запрос для логина
             String jsonLoginRequest = "{\"username\":\"user1\", \"password\":\"password123\"}";
             HttpPost loginRequest = new HttpPost(BASE_URL + "/api/auth/login");
 
             loginRequest.setEntity(new org.apache.hc.core5.http.io.entity.StringEntity(jsonLoginRequest));
             loginRequest.setHeader("Content-Type", "application/json");
 
-            // Отправляем запрос логина
             try (CloseableHttpResponse loginResponse = httpClient.execute(loginRequest)) {
                 assertEquals(200, loginResponse.getCode());  // Проверяем успешный логин
             }
 
-            // Теперь отправляем запрос для выхода
             HttpPost logoutRequest = new HttpPost(BASE_URL + "/api/auth/logout");
 
             try (CloseableHttpResponse logoutResponse = httpClient.execute(logoutRequest)) {
                 String responseString = EntityUtils.toString(logoutResponse.getEntity());
 
-                // Проверяем, что пользователь успешно вышел
                 assertEquals(200, logoutResponse.getCode());
                 assertTrue(responseString.contains("Logged out successfully."));
             }
@@ -77,15 +67,12 @@ class LogoutServletIntegrationTest {
 
     @Test
     void testLogoutWithoutLogin() throws IOException, ParseException {
-        // Сценарий: попытка выхода без авторизации (без активной сессии)
-
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             HttpPost logoutRequest = new HttpPost(BASE_URL + "/api/auth/logout");
 
             try (CloseableHttpResponse logoutResponse = httpClient.execute(logoutRequest)) {
                 String responseString = EntityUtils.toString(logoutResponse.getEntity());
 
-                // Проверяем, что сервер вернул ошибку (пользователь не авторизован)
                 assertEquals(400, logoutResponse.getCode());
                 assertTrue(responseString.contains("No user is currently logged in."));
             }

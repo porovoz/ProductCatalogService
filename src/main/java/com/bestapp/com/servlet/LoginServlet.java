@@ -18,6 +18,20 @@ import java.io.IOException;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * {@code LoginServlet} - A servlet that handles user login requests.
+ * <p>
+ * This servlet listens for POST requests at the {@code /api/auth/login} URL and performs the following actions:
+ * <ul>
+ *   <li>Checks if the user is already logged in by examining the HTTP session.</li>
+ *   <li>Validates the login credentials provided in the request body.</li>
+ *   <li>Attempts to authenticate the user using the {@link AuthService}.</li>
+ *   <li>If the login is successful, it creates a new session and stores the username in the session.</li>
+ *   <li>Logs the login event using the {@link AuditLogger}.</li>
+ *   <li>Returns appropriate HTTP status codes and error messages if any issue occurs during the process.</li>
+ * </ul>
+ * </p>
+ */
 @WebServlet("/api/auth/login")
 public class LoginServlet extends HttpServlet {
 
@@ -28,6 +42,18 @@ public class LoginServlet extends HttpServlet {
 
     private static final String APPLICATION_JSON = "application/json";
 
+    /**
+     * Handles POST requests for user login.
+     * <p>
+     * The method processes the login credentials, validates them, and attempts to authenticate the user.
+     * If successful, a new session is created, and the username is stored in the session. If the login fails,
+     * the method returns a {@code 401 Unauthorized} status with a corresponding error message.
+     * </p>
+     *
+     * @param request  The HTTP request containing the login credentials.
+     * @param response The HTTP response that will be sent back to the client.
+     * @throws IOException If an I/O error occurs while reading the request or writing the response.
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         HttpSession session = request.getSession(false);

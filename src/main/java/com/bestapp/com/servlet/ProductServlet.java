@@ -24,6 +24,25 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * {@code ProductServlet} - A servlet that handles product-related operations such as adding, getting, updating, and deleting products.
+ * <p>
+ * This servlet listens for HTTP requests at the URL pattern {@code /api/products/*}, and performs the following CRUD operations:
+ * <ul>
+ *   <li>{@code POST}: Add a new product</li>
+ *   <li>{@code GET}: Get all products</li>
+ *   <li>{@code PUT}: Update an existing product</li>
+ *   <li>{@code DELETE}: Delete a product by ID</li>
+ * </ul>
+ * <p>
+ * Each operation checks if the user is authenticated by inspecting the session. If the user is not logged in, the servlet will return an {@code 401 Unauthorized} response.
+ * The servlet uses {@link ProductService} to perform CRUD operations on products and {@link AuditLogger} to log these actions for audit purposes.
+ * </p>
+ * <p>
+ * The responses are in {@code application/json} format and include relevant status codes (e.g., {@code 200 OK}, {@code 400 Bad Request}, {@code 404 Not Found}, etc.)
+ * along with appropriate messages.
+ * </p>
+ */
 @WebServlet("/api/products/*")
 public class ProductServlet extends HttpServlet {
 
@@ -37,6 +56,19 @@ public class ProductServlet extends HttpServlet {
     private static final String PRODUCT_NOT_FOUND = "Product not found.";
     private static final String INVALID_ID_FORMAT = "Invalid ID format.";
 
+    /**
+     * Handles the {@code POST} request to add a new product.
+     * <p>
+     * This method reads the {@link ProductDTO} from the request body, validates the data,
+     * and adds the product to the database if valid. It also logs the action using {@link AuditLogger}.
+     * If the user is not authenticated, it responds with a {@code 401 Unauthorized} status.
+     * </p>
+     *
+     * @param request The HTTP request containing the product data in the request body.
+     * @param response The HTTP response that will be sent back to the client.
+     * @throws ServletException If an error occurs while handling the request.
+     * @throws IOException If an error occurs while reading the input or writing the response.
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String user = getLoggedUser(request);
@@ -48,7 +80,6 @@ public class ProductServlet extends HttpServlet {
         }
 
         try {
-            // Add product
             ProductDTO productDTO = objectMapper.readValue(request.getInputStream(), ProductDTO.class);
 
             Set<ConstraintViolation<ProductDTO>> violations = validator.validate(productDTO);
@@ -76,6 +107,19 @@ public class ProductServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Handles the {@code GET} request to get all products.
+     * <p>
+     * This method get the list of all products from the {@link ProductService}, converts them to {@link ProductDTO} objects,
+     * and returns them in the response body in {@code application/json} format. If the user is not authenticated,
+     * it responds with a {@code 401 Unauthorized} status.
+     * </p>
+     *
+     * @param request The HTTP request.
+     * @param response The HTTP response that will be sent back to the client.
+     * @throws ServletException If an error occurs while handling the request.
+     * @throws IOException If an error occurs while reading the input or writing the response.
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String user = getLoggedUser(request);
@@ -87,7 +131,6 @@ public class ProductServlet extends HttpServlet {
         }
 
         try {
-            // Get all products
             List<Product> products = productService.getAllProducts();
             List<ProductDTO> productDTOs = products.stream()
                     .map(ProductMapper.INSTANCE::productToProductDTO)
@@ -101,6 +144,19 @@ public class ProductServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Handles the {@code PUT} request to update an existing product.
+     * <p>
+     * This method reads the {@link ProductDTO} from the request body, validates the data,
+     * and updates the corresponding product in the database. If the product does not exist, it returns a {@code 404 Not Found} status.
+     * It also logs the action using {@link AuditLogger}.
+     * </p>
+     *
+     * @param request The HTTP request containing the product data to update.
+     * @param response The HTTP response that will be sent back to the client.
+     * @throws ServletException If an error occurs while handling the request.
+     * @throws IOException If an error occurs while reading the input or writing the response.
+     */
     @Override
     protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String user = getLoggedUser(request);
@@ -111,7 +167,6 @@ public class ProductServlet extends HttpServlet {
             return;
         }
 
-        // Update product
         ProductDTO productDTO;
         try {
             productDTO = objectMapper.readValue(request.getInputStream(), ProductDTO.class);
@@ -146,6 +201,19 @@ public class ProductServlet extends HttpServlet {
         response.getWriter().write("Product updated successfully.");
     }
 
+    /**
+     * Handles the {@code DELETE} request to delete a product by ID.
+     * <p>
+     * This method deletes the specified product by ID. If the product does not exist, it responds with a {@code 404 Not Found} status.
+     * If the ID format is invalid, it responds with a {@code 400 Bad Request} status.
+     * It also logs the action using {@link AuditLogger}.
+     * </p>
+     *
+     * @param request The HTTP request containing the product ID in the URL path.
+     * @param response The HTTP response that will be sent back to the client.
+     * @throws ServletException If an error occurs while handling the request.
+     * @throws IOException If an error occurs while reading the input or writing the response.
+     */
     @Override
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String user = getLoggedUser(request);

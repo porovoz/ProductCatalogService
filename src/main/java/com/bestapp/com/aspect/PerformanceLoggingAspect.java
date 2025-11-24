@@ -7,23 +7,23 @@ import org.aspectj.lang.annotation.Aspect;
 @Aspect
 public class PerformanceLoggingAspect {
 
-    // Точка среза для всех методов
+    // Pointcut for all the methods
     @Around("execution(* com.bestapp.com.*.*(..))")
     public Object logExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
 
-        // Получаем текущее время до выполнения метода
+        // Getting current time before method execution
         long startTime = System.nanoTime();
 
-        // Выполнение метода
+        // Method execution
         Object result = joinPoint.proceed();
 
-        // Получаем текущее время после выполнения метода
+        // Getting current time after method execution
         long endTime = System.nanoTime();
 
-        // Вычисляем время выполнения в миллисекундах
-        long duration = (endTime - startTime) / 1_000_000; // переводим в миллисекунды
+        // Calculating execution time in milliseconds
+        long duration = (endTime - startTime) / 1_000_000; // converting to milliseconds
 
-        // Логируем время выполнения
+        // Execution time logging
         System.out.println("Performance log: Method " + joinPoint.getSignature().getName() + " executed in " + duration + " ms");
 
         return result;

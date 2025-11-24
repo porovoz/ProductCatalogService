@@ -26,14 +26,13 @@ class ProductServletIntegrationTest {
     private static final String LOGIN_URL = BASE_URL + "/api/auth/login";
     private static final String PRODUCT_URL = BASE_URL + "/api/products/";
 
-    private String sessionCookie; // Для хранения JSESSIONID после логина
+    private String sessionCookie; // Stores JSESSIONID after login
 
     @BeforeAll
     static void setupTomcat() throws Exception {
         tomcat = new Tomcat();
         tomcat.setPort(8080);
 
-        // Каталог веб-приложения
         String webappDir = new File("src/main/webapp").getAbsolutePath();
         tomcat.addContext("", webappDir);
 
@@ -47,9 +46,6 @@ class ProductServletIntegrationTest {
         }
     }
 
-    /**
-     * Выполняем логин и сохраняем cookie сессии
-     */
     private String loginAndGetSessionCookie() throws IOException, ProtocolException {
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             String jsonLoginRequest = "{\"username\":\"user1\",\"password\":\"password123\"}";
@@ -104,7 +100,6 @@ class ProductServletIntegrationTest {
     void testUnauthorizedAccess() throws IOException, ParseException {
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             HttpGet getRequest = new HttpGet(PRODUCT_URL);
-            // Без session cookie
             try (var response = httpClient.execute(getRequest)) {
                 String body = EntityUtils.toString(response.getEntity());
                 assertEquals(401, response.getCode());

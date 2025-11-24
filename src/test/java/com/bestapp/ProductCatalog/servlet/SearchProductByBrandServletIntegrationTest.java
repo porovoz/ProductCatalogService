@@ -29,18 +29,15 @@ class SearchProductByBrandServletIntegrationTest {
 
     @BeforeAll
     static void startTomcat() throws Exception {
-        // Включаем LTW (AspectJ), если используете аспекты
         System.setProperty("org.aspectj.weaver.loadtime.configuration", "META-INF/aop.xml");
         System.setProperty("java.awt.headless", "true");
 
         tomcat = new Tomcat();
         tomcat.setPort(PORT);
 
-        // Каталог веб-приложения
         String webappDir = new File("src/main/webapp").getAbsolutePath();
         var ctx = tomcat.addContext("", webappDir);
 
-        // Регистрируем сервлет
         Tomcat.addServlet(ctx, "searchByBrandServlet", new SearchProductByBrandServlet());
         ctx.addServletMappingDecoded("/api/products/brand", "searchByBrandServlet");
 
@@ -55,12 +52,9 @@ class SearchProductByBrandServletIntegrationTest {
         }
     }
 
-    /**
-     * Мок авторизации через сессию (JSESSIONID)
-     */
     @BeforeEach
     void mockLogin() {
-        sessionCookie = "JSESSIONID=test-session-id"; // эмулируем логин пользователя
+        sessionCookie = "JSESSIONID=test-session-id"; // User login emulation
     }
 
     @Test
@@ -74,7 +68,6 @@ class SearchProductByBrandServletIntegrationTest {
                 String body = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
                 assertEquals(200, response.getCode());
                 assertNotNull(body);
-                // Можно проверить, что ответ содержит ожидаемые поля
                 assertTrue(body.contains("brand") || body.contains("name"));
             }
         }
@@ -100,7 +93,6 @@ class SearchProductByBrandServletIntegrationTest {
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             String brand = "Nike";
             HttpGet request = new HttpGet(SEARCH_URL + "?brand=" + brand);
-            // Не передаем cookie
 
             try (var response = httpClient.execute(request)) {
                 String body = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);

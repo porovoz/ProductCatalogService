@@ -26,15 +26,12 @@ class CacheStatsServletIntegrationTest {
 
     @BeforeAll
     static void setup() throws Exception {
-        // Запуск встроенного Tomcat
         tomcat = new Tomcat();
         tomcat.setPort(8080);
 
-        // Указываем каталог веб-приложения
         String webappDir = new File("src/main/webapp").getAbsolutePath();
-        Context ctx = tomcat.addContext("", webappDir);
+        tomcat.addContext("", webappDir);
 
-        // Добавляем конфигурацию сервера
         tomcat.start();
     }
 
@@ -47,10 +44,7 @@ class CacheStatsServletIntegrationTest {
 
     @Test
     void testCacheStatsWithLogin() throws IOException, ParseException {
-        // Authorization emulation
-
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            // 1. Login
             String jsonLoginRequest = "{\"username\":\"user1\", \"password\":\"password123\"}";
             HttpPost loginRequest = new HttpPost(LOGIN_URL);
             loginRequest.setEntity(new org.apache.hc.core5.http.io.entity.StringEntity(jsonLoginRequest));
@@ -60,7 +54,6 @@ class CacheStatsServletIntegrationTest {
                 assertEquals(200, loginResponse.getCode());  // Успешный логин
             }
 
-            // 2. Sending GET request
             HttpGet request = new HttpGet(BASE_URL + "/api/cache/stats");
             try (CloseableHttpResponse response = httpClient.execute(request)) {
                 String jsonResponse = EntityUtils.toString(response.getEntity());

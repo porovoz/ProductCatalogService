@@ -52,13 +52,6 @@ class UserRepositoryIntegrationTest {
         assertEquals("testUser", found.get().getUsername());
     }
 
-//    @Test
-//    void findByUsername() {
-//        Optional<User> found = userRepository.findByUsername("admin");
-//        assertTrue(found.isPresent());
-//        assertEquals("admin", found.get().getUsername());
-//    }
-
     @Test
     void testFindNonExistingUser() {
         Optional<User> found = userRepository.findByUsername("nonexistent");

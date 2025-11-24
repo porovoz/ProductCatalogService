@@ -25,15 +25,12 @@ class LoginServletIntegrationTest {
 
     @BeforeAll
     static void setup() throws Exception {
-        // Запуск встроенного Tomcat
         tomcat = new Tomcat();
         tomcat.setPort(8080);
 
-        // Указываем каталог веб-приложения
         String webappDir = new File("src/main/webapp").getAbsolutePath();
-        Context ctx = tomcat.addContext("", webappDir);
+        tomcat.addContext("", webappDir);
 
-        // Добавляем конфигурацию сервера
         tomcat.start();
     }
 
@@ -46,21 +43,17 @@ class LoginServletIntegrationTest {
 
     @Test
     void testLoginSuccess() throws IOException, ParseException {
-        // Подготовим JSON запрос для успешного логина
         String jsonRequest = "{\"username\":\"user1\", \"password\":\"password123\"}";
 
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             HttpPost request = new HttpPost(BASE_URL + "/api/auth/login");
 
-            // Устанавливаем тело запроса с данными для логина
             request.setEntity(new org.apache.hc.core5.http.io.entity.StringEntity(jsonRequest));
             request.setHeader("Content-Type", "application/json");
 
-            // Отправляем запрос
             try (CloseableHttpResponse response = httpClient.execute(request)) {
                 String responseString = EntityUtils.toString(response.getEntity());
 
-                // Проверяем успешный ответ
                 assertEquals(200, response.getCode());
                 assertTrue(responseString.contains("Login successful."));
             }
@@ -69,21 +62,17 @@ class LoginServletIntegrationTest {
 
     @Test
     void testLoginFailureInvalidCredentials() throws IOException, ParseException {
-        // Подготовим JSON запрос с некорректными данными
         String jsonRequest = "{\"username\":\"user1\", \"password\":\"wrongpassword\"}";
 
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             HttpPost request = new HttpPost(BASE_URL + "/api/auth/login");
 
-            // Устанавливаем тело запроса с неправильными данными
             request.setEntity(new org.apache.hc.core5.http.io.entity.StringEntity(jsonRequest));
             request.setHeader("Content-Type", "application/json");
 
-            // Отправляем запрос
             try (CloseableHttpResponse response = httpClient.execute(request)) {
                 String responseString = EntityUtils.toString(response.getEntity());
 
-                // Проверяем, что сервер вернул ошибку авторизации
                 assertEquals(401, response.getCode());
                 assertTrue(responseString.contains("Invalid credentials."));
             }
@@ -92,27 +81,21 @@ class LoginServletIntegrationTest {
 
     @Test
     void testLoginAlreadyLoggedIn() throws IOException, ParseException {
-        // Имитируем, что пользователь уже авторизован в сессии
         String jsonRequest = "{\"username\":\"user1\", \"password\":\"password123\"}";
 
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             HttpPost request = new HttpPost(BASE_URL + "/api/auth/login");
 
-            // Устанавливаем тело запроса
             request.setEntity(new org.apache.hc.core5.http.io.entity.StringEntity(jsonRequest));
             request.setHeader("Content-Type", "application/json");
 
-            // Отправляем первый запрос, чтобы залогиниться
             try (CloseableHttpResponse response = httpClient.execute(request)) {
-                // Проверка успешного логина
                 assertEquals(200, response.getCode());
             }
 
-            // Теперь отправляем запрос снова, чтобы проверить "уже залогинен"
             try (CloseableHttpResponse response = httpClient.execute(request)) {
                 String responseString = EntityUtils.toString(response.getEntity());
 
-                // Проверяем, что сервер вернул сообщение об уже авторизованном пользователе
                 assertEquals(200, response.getCode());
                 assertTrue(responseString.contains("Already logged in as: user1"));
             }

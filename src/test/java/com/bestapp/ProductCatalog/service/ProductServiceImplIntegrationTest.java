@@ -31,7 +31,6 @@ class ProductServiceImplIntegrationTest {
 
     @BeforeAll
     void setup() {
-        // Настройка system properties для DatabaseConfig
         System.setProperty("db.url", postgresContainer.getJdbcUrl());
         System.setProperty("db.username", postgresContainer.getUsername());
         System.setProperty("db.password", postgresContainer.getPassword());
@@ -115,11 +114,9 @@ class ProductServiceImplIntegrationTest {
         Product product = new Product("CacheTest", "Desc", 100.0, "Test", "BrandZ", 3);
         productService.addProduct(product);
 
-        // Первый вызов – кэш пустой
         List<Product> firstCall = productService.getAllProducts();
         assertEquals(1, productService.getCache().getCacheMisses());
 
-        // Второй вызов – кэш должен сработать
         List<Product> secondCall = productService.getAllProducts();
         assertEquals(1, productService.getCache().getCacheHits());
     }

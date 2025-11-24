@@ -3,6 +3,12 @@ package com.bestapp.com.dto;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
+/**
+ * {@code ProductDTO} is a Data Transfer Object (DTO) that represents a product in the system.
+ * It encapsulates the details of a product including its ID, name, description, price, category,
+ * brand, and stock quantity. This class is used for transferring product data between
+ * different layers of the application.
+ */
 @Data
 public class ProductDTO {
 
