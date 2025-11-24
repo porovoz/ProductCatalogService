@@ -139,13 +139,11 @@
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjrt</artifactId>
             <version>${aspectj.version}</version>
-<!--            <scope>runtime</scope>-->
         </dependency>
         <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjweaver</artifactId>
             <version>${aspectj.version}</version>
-<!--            <scope>runtime</scope>-->
         </dependency>
         <dependency>
             <groupId>org.aspectj</groupId>
@@ -233,28 +231,6 @@
                     <useSystemClassLoader>true</useSystemClassLoader>
                 </configuration>
             </plugin>
-<!--            <plugin>-->
-<!--                <groupId>org.codehaus.mojo</groupId>-->
-<!--                <artifactId>aspectj-maven-plugin</artifactId>-->
-<!--                <version>${aspectj.maven.plugin}</version>-->
-<!--                <configuration>-->
-<!--                    <complianceLevel>${maven.compiler.source}</complianceLevel>-->
-<!--                    <source>${maven.compiler.source}</source>-->
-<!--                    <target>${maven.compiler.target}</target>-->
-<!--                    <showWeaveInfo>true</showWeaveInfo>-->
-<!--                    <verbose>true</verbose>-->
-<!--                    <Xlint>ignore</Xlint>-->
-<!--                    <encoding>${project.build.sourceEncoding}</encoding>-->
-<!--                </configuration>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <goals>-->
-<!--                            <goal>compile</goal>-->
-<!--                            <goal>test-compile</goal>-->
-<!--                        </goals>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
             <plugin>
                 <groupId>dev.aspectj</groupId>
                 <artifactId>aspectj-maven-plugin</artifactId>
