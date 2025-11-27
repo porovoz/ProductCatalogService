@@ -25,6 +25,12 @@ public class DatabaseConnectionProvider {
         String username = configProperties.getProperty("db.username");
         String password = configProperties.getProperty("db.password");
 
+        try {
+            Class.forName("org.postgresql.Driver");
+        } catch (ClassNotFoundException e) {
+            throw new SQLException("Postgres JDBC driver not found on classpath", e);
+        }
+
         return DriverManager.getConnection(url, username, password);
     }
 
