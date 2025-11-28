@@ -1,5 +1,6 @@
 package com.bestapp.com.model;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,10 +16,21 @@ import java.util.Objects;
 @Getter
 @Setter
 @ToString
+@Entity
+@Table(name = "user")
 public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "username", nullable = false)
     private String username;
+
+    @Column(name = "passwordHash", nullable = false)
     private String passwordHash;
+
+    @Column(name = "role", nullable = false)
     private String role;
 
     @Override

@@ -1,20 +1,26 @@
 package com.bestapp.ProductCatalog.service;
 
+import com.bestapp.com.dto.CreateOrUpdateProductDTO;
+import com.bestapp.com.dto.ProductDTO;
 import com.bestapp.com.model.Product;
 import com.bestapp.com.repository.ProductRepository;
 import com.bestapp.com.service.impl.ProductServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 class ProductServiceImplTest {
 
@@ -24,58 +30,165 @@ class ProductServiceImplTest {
     @InjectMocks
     private ProductServiceImpl productService;
 
+    private CreateOrUpdateProductDTO createOrUpdateProductDTO;
+
     @BeforeEach
-    void setup() {
+    void setUp() {
         MockitoAnnotations.openMocks(this);
+        createOrUpdateProductDTO = new CreateOrUpdateProductDTO();
+        createOrUpdateProductDTO.setName("Product1");
+        createOrUpdateProductDTO.setDescription("Description");
+        createOrUpdateProductDTO.setPrice(100.0);
+        createOrUpdateProductDTO.setCategory("Category");
+        createOrUpdateProductDTO.setBrand("Brand");
+        createOrUpdateProductDTO.setStockQuantity(10);
     }
 
     @Test
-    void testAddProductClearsCache() {
-        Product product = new Product("P1", "Desc", 10, "Cat", "Brand", 1);
+    @DisplayName("Create product should return ProductDTO")
+    void createProductShouldReturnProductDTO() {
+        Product savedProduct = new Product("Product1", "Description", 100.0, "Category", "Brand", 10);
+        savedProduct.setId(1L);
 
-        productService.addProduct(product);
+        when(productRepository.save(any(Product.class)))
+                .thenAnswer(invocation -> {
+                    Product p = invocation.getArgument(0);
+                    p.setId(1L);
+                    return p;
+                });
 
-        verify(productRepository, times(1)).save(product);
-        assertEquals(0, productService.getCache().getCacheHits());
+        ProductDTO result = productService.createProduct(createOrUpdateProductDTO);
+
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+        assertEquals("Product1", result.getName());
+        assertEquals("Brand", result.getBrand());
+
+        verify(productRepository, times(1)).save(any(Product.class));
     }
 
     @Test
-    void testGetAllProductsCaching() {
-        Product product = new Product("P1", "Desc", 10, "Cat", "Brand", 1);
-        when(productRepository.findAll()).thenReturn(List.of(product));
+    @DisplayName("Delete product by id should delete product")
+    void deleteProductByIdShouldDeleteProduct() {
+        Long productId = 1L;
+        doNothing().when(productRepository).deleteById(productId);
 
-        List<Product> firstCall = productService.getAllProducts();
-        List<Product> secondCall = productService.getAllProducts();
+        productService.deleteProductById(productId);
 
-        verify(productRepository, times(1)).findAll();
-        assertEquals(1, firstCall.size());
-        assertEquals(1, secondCall.size());
-        assertEquals(1, productService.getCache().getCacheHits());
+        verify(productRepository, times(1)).deleteById(productId);
     }
 
     @Test
-    void testGetByCategoryCaching() {
-        Product product = new Product("P1", "Desc", 10, "Cat", "Brand", 1);
-        when(productRepository.findByCategory("Cat")).thenReturn(List.of(product));
+    @DisplayName("Update product should return updated ProductDTO")
+    void updateProductShouldReturnUpdatedProductDTO() {
+        Long productId = 1L;
+        Product existingProduct = new Product("Product1", "Description", 100.0, "Category", "Brand", 10);
+        existingProduct.setId(productId);
 
-        List<Product> firstCall = productService.getByCategory("Cat");
-        List<Product> secondCall = productService.getByCategory("Cat");
+        when(productRepository.findById(productId))
+                .thenReturn(Optional.of(existingProduct));
 
-        verify(productRepository, times(1)).findByCategory("Cat");
-        assertEquals(1, firstCall.size());
-        assertEquals(1, secondCall.size());
-        assertEquals(1, productService.getCache().getCacheHits());
+        when(productRepository.save(any(Product.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        ProductDTO result = productService.updateProduct(productId, createOrUpdateProductDTO);
+
+        assertNotNull(result);
+        assertEquals("Product1", result.getName());
+        assertEquals("Brand", result.getBrand());
+        assertEquals(100.0, result.getPrice());
+
+        verify(productRepository).findById(productId);
+        verify(productRepository).save(any(Product.class));
     }
 
     @Test
-    void testRemoveAndUpdateProductClearsCache() {
-        Product product = new Product("P1", "Desc", 10, "Cat", "Brand", 1);
+    @DisplayName("Find all products should return product DTO list")
+    void findAllProductsShouldReturnProductDTOList() {
+        Product product = new Product("Product1", "Description", 100.0, "Category", "Brand", 10);
 
-        productService.updateProductById(1L, product);
-        productService.removeProductById(1L);
+        List<Product> products = List.of(product);
+        PageRequest pageRequest = PageRequest.of(0, 50);
+        Page<Product> page = new PageImpl<>(products, pageRequest, products.size());
 
-        verify(productRepository, times(1)).updateById(1L, product);
-        verify(productRepository, times(1)).deleteById(1L);
-        assertEquals(0, productService.getCache().getCacheHits());
+        when(productRepository.findAll(pageRequest)).thenReturn(page);
+
+        List<ProductDTO> result = productService.findAllProducts(1, 50);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("Product1", result.get(0).getName());
+
+        verify(productRepository, times(1)).findAll(pageRequest);
+    }
+
+    @Test
+    @DisplayName("Get products by category should return product DTO list")
+    void getProductsByCategoryShouldReturnProductDTOList() {
+        String category = "Category1";
+        Product product = new Product("Product1", "Description", 100.0, category, "Brand", 10);
+
+        when(productRepository.findByCategoryIgnoreCase(category))
+                .thenReturn(List.of(product));
+
+        List<ProductDTO> result = productService.getProductsByCategory(category);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("Product1", result.get(0).getName());
+
+        verify(productRepository, times(1))
+                .findByCategoryIgnoreCase(category);
+    }
+
+    @Test
+    @DisplayName("Get products by brand should return product DTO list")
+    void getProductsByBrandShouldReturnProductDTOList() {
+        String brand = "Brand1";
+        Product product = new Product("Product1", "Description", 100.0, "Category", brand, 10);
+
+        when(productRepository.findByBrandIgnoreCase(brand))
+                .thenReturn(List.of(product));
+
+        List<ProductDTO> result = productService.getProductsByBrand(brand);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("Product1", result.get(0).getName());
+
+        verify(productRepository, times(1))
+                .findByBrandIgnoreCase(brand);
+    }
+
+    @Test
+    @DisplayName("Get products by price range should return product DTO list")
+    void getProductsByPriceRangeShouldReturnProductDTOList() {
+        double min = 50.0;
+        double max = 150.0;
+        Product product = new Product("Product1", "Description", 100.0, "Category", "Brand", 10);
+
+        when(productRepository.findByPriceBetween(min, max))
+                .thenReturn(List.of(product));
+
+        List<ProductDTO> result = productService.getProductsByPriceRange(min, max);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("Product1", result.get(0).getName());
+
+        verify(productRepository, times(1))
+                .findByPriceBetween(min, max);
+    }
+
+    @Test
+    @DisplayName("Exists by id should return true")
+    void existsByIdShouldReturnTrue() {
+        Long id = 1L;
+        when(productRepository.existsById(id)).thenReturn(true);
+
+        boolean result = productService.existsById(id);
+
+        assertTrue(result);
+        verify(productRepository, times(1)).existsById(id);
     }
 }

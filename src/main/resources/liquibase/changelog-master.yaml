@@ -9,3 +9,5 @@ databaseChangeLog:
       file: liquibase/scripts/changeset-3-create-users.yaml
   - include:
       file: liquibase/scripts/changeset-4-insert-admin.yaml
+  - include:
+      file: liquibase/scripts/changeset-5-create-audit.yaml

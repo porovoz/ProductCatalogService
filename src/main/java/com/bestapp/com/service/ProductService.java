@@ -1,7 +1,7 @@
 package com.bestapp.com.service;
 
-import com.bestapp.com.cache.ProductCache;
-import com.bestapp.com.model.Product;
+import com.bestapp.com.dto.CreateOrUpdateProductDTO;
+import com.bestapp.com.dto.ProductDTO;
 
 import java.util.List;
 
@@ -13,43 +13,41 @@ public interface ProductService {
     /**
      * Adds a new product.
      */
-    void addProduct(Product product);
+    ProductDTO createProduct(CreateOrUpdateProductDTO createOrUpdateProductDTO);
 
     /**
      * Updates an existing product by ID.
      */
-    void updateProductById(Long id, Product product);
+    ProductDTO updateProduct(Long id, CreateOrUpdateProductDTO createOrUpdateProductDTO);
 
     /**
      * Removes a product by ID.
      */
-    void removeProductById(Long id);
+    void deleteProductById(Long id);
 
     /**
      * Returns all products.
      */
-    List<Product> getAllProducts();
+    List<ProductDTO> findAllProducts(Integer pageNumber, Integer pageSize);
 
     /**
      * Returns products filtered by category.
      */
-    List<Product> getByCategory(String category);
+    List<ProductDTO> getProductsByCategory(String category);
 
     /**
      * Returns products filtered by brand.
      */
-    List<Product> getByBrand(String brand);
+    List<ProductDTO> getProductsByBrand(String brand);
 
     /**
      * Returns products within a price range.
      */
-    List<Product> getByPriceRange(double min, double max);
+    List<ProductDTO> getProductsByPriceRange(double min, double max);
 
     /**
      * Checks whether a product with a given ID exists.
      */
     boolean existsById(Long id);
-
-    ProductCache getCache();
 
 }

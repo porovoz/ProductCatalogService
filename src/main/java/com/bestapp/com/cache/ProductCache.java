@@ -1,6 +1,7 @@
 package com.bestapp.com.cache;
 
 import com.bestapp.com.model.Product;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
 
@@ -11,11 +12,10 @@ import java.util.*;
  * Also tracks cache hit/miss statistics.
  * </p>
  */
+@Component
 public class ProductCache {
 
     private final Map<CacheType, Map<String, List<Product>>> cache = new EnumMap<>(CacheType.class);
-    private int cacheHits = 0;
-    private int cacheMisses = 0;
 
     /**
      * Initializes cache maps for all {@link CacheType} values.
@@ -36,11 +36,8 @@ public class ProductCache {
     public List<Product> getFromCache(String key, CacheType type) {
         List<Product> products = cache.get(type).get(key);
         if (products != null) {
-            cacheHits++;
-            System.out.println("Cache hit: " + type + " -> " + key);
             return Collections.unmodifiableList(products);
         }
-        cacheMisses++;
         return List.of();
     }
 
@@ -61,26 +58,6 @@ public class ProductCache {
      */
     public void clearAll() {
         cache.values().forEach(Map::clear);
-        cacheHits = 0;
-        cacheMisses = 0;
-    }
-
-    /**
-     * Returns count of cache hits.
-     *
-     * @return hits
-     */
-    public int getCacheHits() {
-        return cacheHits;
-    }
-
-    /**
-     * Returns count of cache misses.
-     *
-     * @return misses
-     */
-    public int getCacheMisses() {
-        return cacheMisses;
     }
 
 }

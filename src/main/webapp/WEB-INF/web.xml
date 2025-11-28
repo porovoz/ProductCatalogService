@@ -8,7 +8,7 @@
     <!-- ===== AUTH ===== -->
     <servlet>
         <servlet-name>loginServlet</servlet-name>
-        <servlet-class>com.bestapp.com.servlet.LoginServlet</servlet-class>
+        <servlet-class>com.bestapp.com.controller.LoginServlet</servlet-class>
     </servlet>
 
     <servlet-mapping>
@@ -18,7 +18,7 @@
 
     <servlet>
         <servlet-name>logoutServlet</servlet-name>
-        <servlet-class>com.bestapp.com.servlet.LogoutServlet</servlet-class>
+        <servlet-class>com.bestapp.com.controller.LogoutServlet</servlet-class>
     </servlet>
 
     <servlet-mapping>
@@ -30,7 +30,7 @@
 
     <servlet>
         <servlet-name>getAllProductsServlet</servlet-name>
-        <servlet-class>com.bestapp.com.servlet.GetAllProductsServlet</servlet-class>
+        <servlet-class>com.bestapp.com.controller.GetAllProductsServlet</servlet-class>
     </servlet>
 
     <servlet-mapping>
@@ -40,7 +40,7 @@
 
     <servlet>
         <servlet-name>searchByCategoryServlet</servlet-name>
-        <servlet-class>com.bestapp.com.servlet.SearchProductByCategoryServlet</servlet-class>
+        <servlet-class>com.bestapp.com.controller.SearchProductByCategoryServlet</servlet-class>
     </servlet>
 
     <servlet-mapping>
@@ -50,7 +50,7 @@
 
     <servlet>
         <servlet-name>searchByBrandServlet</servlet-name>
-        <servlet-class>com.bestapp.com.servlet.SearchProductByBrandServlet</servlet-class>
+        <servlet-class>com.bestapp.com.controller.SearchProductByBrandServlet</servlet-class>
     </servlet>
 
     <servlet-mapping>
@@ -60,7 +60,7 @@
 
     <servlet>
         <servlet-name>searchByPriceRangeServlet</servlet-name>
-        <servlet-class>com.bestapp.com.servlet.SearchProductByPriceRangeServlet</servlet-class>
+        <servlet-class>com.bestapp.com.controller.SearchProductByPriceRangeServlet</servlet-class>
     </servlet>
 
     <servlet-mapping>
@@ -70,7 +70,7 @@
 
     <servlet>
         <servlet-name>addProductServlet</servlet-name>
-        <servlet-class>com.bestapp.com.servlet.AddProductServlet</servlet-class>
+        <servlet-class>com.bestapp.com.controller.AddProductServlet</servlet-class>
     </servlet>
 
     <servlet-mapping>
@@ -80,7 +80,7 @@
 
     <servlet>
         <servlet-name>updateProductServlet</servlet-name>
-        <servlet-class>com.bestapp.com.servlet.UpdateProductServlet</servlet-class>
+        <servlet-class>com.bestapp.com.controller.UpdateProductServlet</servlet-class>
     </servlet>
 
     <servlet-mapping>
@@ -90,7 +90,7 @@
 
     <servlet>
         <servlet-name>deleteProductServlet</servlet-name>
-        <servlet-class>com.bestapp.com.servlet.DeleteProductServlet</servlet-class>
+        <servlet-class>com.bestapp.com.controller.DeleteProductServlet</servlet-class>
     </servlet>
 
     <servlet-mapping>
