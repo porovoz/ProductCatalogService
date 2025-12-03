@@ -12,7 +12,6 @@ import java.util.*;
  * Also tracks cache hit/miss statistics.
  * </p>
  */
-@Component
 public class ProductCache {
 
     private final Map<CacheType, Map<String, List<Product>>> cache = new EnumMap<>(CacheType.class);
