@@ -1,5 +1,6 @@
 package com.bestapp.com.model;
 
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.Objects;
@@ -12,13 +13,30 @@ import java.util.Objects;
 @Getter
 @Setter
 @ToString
+@Entity
+@Table(name = "product")
 public class Product {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "name", nullable = false)
     private String name;
+
+    @Column(name = "description", nullable = false)
     private String description;
+
+    @Column(name = "price", nullable = false)
     private double price;
+
+    @Column(name = "category", nullable = false)
     private String category;
+
+    @Column(name = "brand", nullable = false)
     private String brand;
+
+    @Column(name = "stockQuantity", nullable = false)
     private int stockQuantity;
 
     public Product(String name, String description, double price, String category, String brand, int stockQuantity) {

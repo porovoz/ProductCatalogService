@@ -2,10 +2,17 @@ package com.bestapp.com.service.impl;
 
 import com.bestapp.com.cache.CacheType;
 import com.bestapp.com.cache.ProductCache;
+import com.bestapp.com.dto.CreateOrUpdateProductDTO;
+import com.bestapp.com.dto.ProductDTO;
+import com.bestapp.com.exception.ProductNotFoundException;
 import com.bestapp.com.model.Product;
 import com.bestapp.com.repository.ProductRepository;
+import com.bestapp.com.service.ProductMapper;
 import com.bestapp.com.service.ProductService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -14,6 +21,7 @@ import java.util.List;
  * <p>This class acts as a service layer between controllers and storage:
  * it delegates CRUD operations to {@link ProductRepository}.</p>
  */
+@Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
@@ -23,12 +31,15 @@ public class ProductServiceImpl implements ProductService {
     /**
      * Saves a new product into the repository.
      *
-     * @param product the product to create
+     * @param createOrUpdateProductDTO the product to create
      */
     @Override
-    public void addProduct(Product product) {
-        productRepository.save(product);
+    @Transactional
+    public ProductDTO createProduct(CreateOrUpdateProductDTO createOrUpdateProductDTO) {
+        Product createdProduct = productRepository.save(ProductMapper.INSTANCE.createOrUpdateProductDTOtoProduct(createOrUpdateProductDTO));
+        ProductDTO productDTO = ProductMapper.INSTANCE.productToProductDTO(createdProduct);
         cache.clearAll();
+        return productDTO;
     }
 
     /**
@@ -37,7 +48,8 @@ public class ProductServiceImpl implements ProductService {
      * @param id ID of product to delete
      */
     @Override
-    public void removeProductById(Long id) {
+    @Transactional
+    public void deleteProductById(Long id) {
         productRepository.deleteById(id);
         cache.clearAll();
     }
@@ -46,12 +58,17 @@ public class ProductServiceImpl implements ProductService {
      * Updates an existing product.
      *
      * @param id      identifier of product to update
-     * @param product new product data
+     * @param createOrUpdateProductDTO new product data
      */
     @Override
-    public void updateProductById(Long id, Product product) {
-        productRepository.updateById(id, product);
+    @Transactional
+    public ProductDTO updateProduct(Long id, CreateOrUpdateProductDTO createOrUpdateProductDTO) {
+        Product product = productRepository.findById(id).orElseThrow(ProductNotFoundException::new);
+        ProductMapper.INSTANCE.updateProduct(createOrUpdateProductDTO, product);
+        product = productRepository.save(product);
+        ProductDTO productDTO = ProductMapper.INSTANCE.productToProductDTO(product);
         cache.clearAll();
+        return productDTO;
     }
 
     /**
@@ -60,14 +77,19 @@ public class ProductServiceImpl implements ProductService {
      * @return list of all products in storage
      */
     @Override
-    public List<Product> getAllProducts() {
+    @Transactional(readOnly = true)
+    public List<ProductDTO> findAllProducts(Integer pageNumber, Integer pageSize) {
+        if (pageSize > 50 || pageSize <= 0) {
+            pageSize = 50;
+        }
+        PageRequest pageRequest = PageRequest.of(pageNumber - 1, pageSize);
         List<Product> cached = cache.getFromCache("all", CacheType.ALL);
         if (!cached.isEmpty()) {
-            return cached;
+            return ProductMapper.INSTANCE.productListToProductDTOList(cached);
         }
-        List<Product> all = productRepository.findAll();
+        List<Product> all = productRepository.findAll(pageRequest).getContent();
         cache.addToCache("all", CacheType.ALL, all);
-        return all;
+        return ProductMapper.INSTANCE.productListToProductDTOList(all);
     }
 
     /**
@@ -77,14 +99,15 @@ public class ProductServiceImpl implements ProductService {
      * @return list of matching products
      */
     @Override
-    public List<Product> getByCategory(String category) {
+    @Transactional(readOnly = true)
+    public List<ProductDTO> getProductsByCategory(String category) {
         List<Product> cached = cache.getFromCache(category, CacheType.CATEGORY);
         if (!cached.isEmpty()) {
-            return cached;
+            return ProductMapper.INSTANCE.productListToProductDTOList(cached);
         }
-        List<Product> result = productRepository.findByCategory(category);
+        List<Product> result = productRepository.findByCategoryIgnoreCase(category);
         cache.addToCache(category, CacheType.CATEGORY, result);
-        return result;
+        return ProductMapper.INSTANCE.productListToProductDTOList(result);
     }
 
     /**
@@ -94,14 +117,15 @@ public class ProductServiceImpl implements ProductService {
      * @return list of products with given brand
      */
     @Override
-    public List<Product> getByBrand(String brand) {
+    @Transactional(readOnly = true)
+    public List<ProductDTO> getProductsByBrand(String brand) {
         List<Product> cached = cache.getFromCache(brand, CacheType.BRAND);
         if (!cached.isEmpty()) {
-            return cached;
+            return ProductMapper.INSTANCE.productListToProductDTOList(cached);
         }
-        List<Product> result = productRepository.findByBrand(brand);
+        List<Product> result = productRepository.findByBrandIgnoreCase(brand);
         cache.addToCache(brand, CacheType.BRAND, result);
-        return result;
+        return ProductMapper.INSTANCE.productListToProductDTOList(result);
     }
 
     /**
@@ -112,15 +136,16 @@ public class ProductServiceImpl implements ProductService {
      * @return list of products in price range
      */
     @Override
-    public List<Product> getByPriceRange(double min, double max) {
+    @Transactional(readOnly = true)
+    public List<ProductDTO> getProductsByPriceRange(double min, double max) {
         String key = min + "-" + max;
         List<Product> cached = cache.getFromCache(key, CacheType.PRICE);
         if (!cached.isEmpty()) {
-            return cached;
+            return ProductMapper.INSTANCE.productListToProductDTOList(cached);
         }
-        List<Product> result = productRepository.findByPriceRange(min, max);
+        List<Product> result = productRepository.findByPriceBetween(min, max);
         cache.addToCache(key, CacheType.PRICE, result);
-        return result;
+        return ProductMapper.INSTANCE.productListToProductDTOList(result);
     }
 
     /**
@@ -129,13 +154,6 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public boolean existsById(Long id) {
         return productRepository.existsById(id);
-    }
-
-    /**
-     * @return cache instance.
-     */
-    public ProductCache getCache() {
-        return cache;
     }
 
 }

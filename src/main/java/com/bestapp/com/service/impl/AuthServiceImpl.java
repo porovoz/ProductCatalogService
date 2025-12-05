@@ -1,22 +1,23 @@
 package com.bestapp.com.service.impl;
 
-import com.bestapp.com.config.DatabaseConfig;
 import com.bestapp.com.model.User;
 import com.bestapp.com.repository.UserRepository;
 import com.bestapp.com.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
 /**
  * Simple user authentication.
  */
+@Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
+    private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
-    private final UserRepository userRepository = new UserRepository(new DatabaseConfig());
     private String currentUser = null;
 
     /**
@@ -31,9 +32,9 @@ public class AuthServiceImpl implements AuthService {
         if (username == null || password == null) {
             return false;
         }
-        Optional<User> maybeUser = userRepository.findByUsername(username);
-        if (maybeUser.isEmpty()) return false;
-        User user = maybeUser.get();
+        Optional<User> userOptional = userRepository.findByUsername(username);
+        if (userOptional.isEmpty()) return false;
+        User user = userOptional.get();
         boolean matches = passwordEncoder.matches(password, user.getPasswordHash());
         if (matches) {
             currentUser = user.getUsername();
