@@ -1,5 +1,6 @@
 package com.bestapp.com.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
@@ -9,6 +10,7 @@ import lombok.Data;
  * different layers of the application.
  */
 @Data
+@AllArgsConstructor
 public class ProductDTO {
 
     private Long id;

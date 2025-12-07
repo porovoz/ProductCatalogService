@@ -1,10 +1,7 @@
 package com.bestapp.com.model;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import java.util.Objects;
 
@@ -13,11 +10,13 @@ import java.util.Objects;
  * Contains basic user information and unique identifier.
  */
 @NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
 @ToString
+@Builder
 @Entity
-@Table(name = "user")
+@Table(name = "users")
 public class User {
 
     @Id
@@ -31,7 +30,8 @@ public class User {
     private String passwordHash;
 
     @Column(name = "role", nullable = false)
-    private String role;
+    @Enumerated(EnumType.STRING)
+    private RoleType role;
 
     @Override
     public boolean equals(Object o) {

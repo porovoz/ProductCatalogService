@@ -6,7 +6,6 @@ import com.bestapp.com.model.Product;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.factory.Mappers;
 
 import java.util.List;
 
@@ -15,10 +14,8 @@ import java.util.List;
  * and the {@link ProductDTO} Data Transfer Object (DTO).
  * It leverages the MapStruct library for automatic code generation of the mapping implementation.
  */
-@Mapper
+@Mapper(componentModel = "spring")
 public interface ProductMapper {
-
-    ProductMapper INSTANCE = Mappers.getMapper(ProductMapper.class);
 
     /**
      * Converts a {@link Product} entity to a {@link ProductDTO}.

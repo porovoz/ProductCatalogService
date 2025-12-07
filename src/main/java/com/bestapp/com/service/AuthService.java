@@ -1,5 +1,10 @@
 package com.bestapp.com.service;
 
+import com.bestapp.com.dto.Register;
+import com.bestapp.com.security.dto.JWTRequest;
+import com.bestapp.com.security.dto.JWTResponse;
+import lombok.NonNull;
+
 /**
  * Simple in-memory user authentication.
  * Stores username->password pairs and tracks the current logged-in user.
@@ -7,23 +12,28 @@ package com.bestapp.com.service;
 public interface AuthService {
 
     /**
-     * Attempts to log in with given credentials.
+     * Checks the correctness of the entered credentials when trying to log in.
+     * @param authenticationRequest an object containing information to proceed successful login.
      */
-    boolean login(String username, String password);
+    JWTResponse login(@NonNull JWTRequest authenticationRequest);
 
     /**
-     * Logs out the currently logged-in user.
+     * Gets a new access token when it became invalid.
+     * @param refreshToken an object containing refresh token to get a new access token.
      */
-    void logout();
+    JWTResponse getAccessToken(@NonNull String refreshToken);
 
     /**
-     * Returns currently logged-in user or null if none.
+     * Registers a new user in the application.
+     * @param register an object containing information about user registration.
+     * @return <B>true</B> if the registration was successful, otherwise <B>false</B> .
      */
-    String getCurrentUser();
+    boolean register(Register register);
 
     /**
-     * True if currently logged-in user is not null.
+     * Gets a new access and refresh tokens when it became invalid.
+     * @param refreshToken an object containing refresh token to get a new access and refresh tokens.
      */
-    boolean isLoggedIn();
+    JWTResponse refreshToken(@NonNull String refreshToken);
 
 }

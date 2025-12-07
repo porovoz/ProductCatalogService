@@ -1,7 +1,8 @@
 package com.bestapp.com.dto;
 
+import com.bestapp.com.model.RoleType;
 import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
+import lombok.*;
 
 /**
  * {@code UserDTO} is a Data Transfer Object (DTO) that represents a user in the system.
@@ -9,13 +10,19 @@ import lombok.Data;
  * This class is used for transferring user-related data between different layers
  * of the application.
  */
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserDTO {
 
     @NotBlank(message = "Username can not be blank.")
     private String username;
 
+    @NotBlank(message = "Password can not be blank.")
+    private String passwordHash;
+
     @NotBlank(message = "Role can not be blank.")
-    private String role;
+    private RoleType role;
 
 }

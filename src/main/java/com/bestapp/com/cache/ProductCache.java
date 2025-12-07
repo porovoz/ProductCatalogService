@@ -1,7 +1,6 @@
 package com.bestapp.com.cache;
 
 import com.bestapp.com.model.Product;
-import org.springframework.stereotype.Component;
 
 import java.util.*;
 
