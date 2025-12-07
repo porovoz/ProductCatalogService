@@ -1,29 +1,30 @@
 # Product Catalog Service (Marketplace)
 ## Описание проекта
 
-**Product Catalog Service** — это приложение предоставляет REST API для управления продуктами, 
-а также аутентификации пользователей и работы с кэшем. Включает работу с базой данных, добавление/удаление продуктов, 
-а также различные фильтрации продуктов по категориям, брендам и диапазону цен.
+**Product Catalog Service** — это приложение, предоставляющее REST API 
+для управления продуктами, аутентификации пользователей, а также 
+кеширования часто запрашиваемых данных. С помощью API можно добавлять, 
+редактировать, удалять товары, а также фильтровать их по категориям, 
+брендам и диапазону цен.
 
-Приложение поддерживает:
+Приложение включает:
 
 - Добавление, редактирование, удаление и просмотр товаров
 - Поиск и фильтрацию по категории, бренду и диапазону цен
-- Авторизацию пользователей
-- Аудит действий (логирование входа/выхода и бизнес-действий)
+- Авторизацию пользователей с использованием JWT токенов
+- Аудит действий (логирование входа и бизнес-действий)
 - Кеширование часто запрашиваемых данных
-- Простая метрика (время выполнения поиска)
-- Логирование вызова методов и действий пользователя
+- Простой механизм логирования и мониторинга производительности
 ---
 
 ## Структура проекта
 
-- `servlet/` — классы для обработки HTTP-запросов.
-- `dto/` — объекты для передачи данных между слоями.
+- `auth/` — классы для обработки аутентификации и управления JWT токенами.
+- `dto/` — ообъекты передачи данных (DTO) для взаимодействия между слоями.
 - `service/` — бизнес-логика приложения.
 - `repository/` - взаимодействие с базой данных.
 - `model/` — модель продукта.
-- `aspect/` — классы аспектов AspectJ для метрик и логирования.
+- `security/` — классы для обработки безопасности и авторизации пользователей.
 
 ## Технологии
 
@@ -32,9 +33,9 @@
 | Язык | Java 17+                                           |
 | Хранение данных | PostgreSQL                                         |
 | Коллекции | Map, List, EnumMap, LinkedHashMap                  |
-| Кеширование | EnumMap<CacheType, Map<String, List<Product>>>     |
-| Авторизация | PostgreSQL                                         |
-| Логирование | AuditAspect, PerformanceLoggingAspect, AuditLogger |
+| Кеширование | Кеширование результатов запросов с использованием HashMap    |
+| Авторизация | JWT (JSON Web Token)                                         |
+| Логирование | SLF4J, AuditAspect, PerformanceLoggingAspect |
 
 ---
 
@@ -47,14 +48,16 @@
 
 2. **Скомпилируйте проект:**
     ```bash
-   javac -d out src/com/bestapp/com/**/*.java
+   mvn clean install
    
 3. **Запустите приложение:**
-После сборки проекта, запустите приложение с помощью встроенного сервера Tomcat, используя команду:
+После сборки проекта, запустите приложение с помощью встроенного сервера:
    ```bash
-   mvn tomcat7:run
+   mvn spring-boot:run
    
 4. **Авторизация:**
+   
+Используйте предустановленные учетные данные для авторизации:
    * Username: admin
    * Password: password
 
@@ -86,20 +89,27 @@
 
 Результаты кешируются для ускорения повторных запросов.
 
-### Кеширование
-
-- Первый запрос сохраняет результат в кеше
-
-- Повторный запрос — мгновенный доступ
-
-- Кеш сбрасывается при изменении каталога
-
 ### Примеры запросов в Postman
 
-- Login
-POST productCatalogService/api/auth/login
+- Регистрация пользователя
 
-URL: http://localhost:8080/productCatalogService/api/auth/login
+  POST /api/auth/register
+
+URL: http://localhost:8080/api/auth/register
+
+Body:
+
+ ```
+  {
+  "username": "newuser",
+  "password": "mewpassword"
+  }
+```
+- Login
+
+POST /api/auth/login
+
+URL: http://localhost:8080/api/auth/login
 
 Body:
 
@@ -109,31 +119,36 @@ Body:
   "password": "password"
   }
 ```
-cURL:
- ```
-curl --location 'http://localhost:8080/productCatalogService/api/auth/login' \
---header 'Content-Type: application/json' \
---data '{
-"username": "admin",
-"password": "password"
-}
-'
- ```
+- Получение нового access токена (с помощью refresh токена):
 
-- Logout
-  POST /api/auth/logout
+POST /api/auth/token
 
-URL: http://localhost:8080/productCatalogService/api/auth/logout
+URL: http://localhost:8080/api/auth/token
 
-cURL:
+Body:
+
  ```
-curl --location --request POST 'http://localhost:8080/productCatalogService/api/auth/logout'
- ```
+  {
+  "refreshToken": "your_refresh_token_here"
+  }
+```
+- Обновление refresh токена:
 
+POST /api/auth/refresh
+
+URL: http://localhost:8080/api/auth/refresh
+
+Body:
+
+ ```
+  {
+  "refreshToken": "your_refresh_token_here"
+  }
+```
 - Create product
-  POST productCatalogService/api/products/
+  POST /api/products/
 
-URL: http://localhost:8080/productCatalogService/api/products
+URL: http://localhost:8080/api/products
 
 Body:
 
@@ -147,36 +162,22 @@ Body:
   "stockQuantity": 10
 }
 ```
-cURL:
- ```
-curl --location 'http://localhost:8080/productCatalogService/api/products' \
---header 'Content-Type: application/json' 'Cookie: JSESSIONID=74C6F75665CD6104040F88EDFC403656' \
---data '{
-  "name": "Test Product",
-  "description": "Description",
-  "price": 100.0,
-  "category": "Category 1",
-  "brand": "Brand A",
-  "stockQuantity": 10
-}
-'
- ```
 
 - Get all products
-  POST productCatalogService/api/products/
+  POST /api/products/
 
-URL: http://localhost:8080/productCatalogService/api/products
+URL: http://localhost:8080/api/products
 
 cURL:
  ```
-curl --location 'http://localhost:8080/productCatalogService/api/products'
---header 'Cookie: JSESSIONID=74C6F75665CD6104040F88EDFC403656'
+curl --location 'http://localhost:8080/api/products?pageNumber=1&pageSize=10' \
+--header 'Authorization: Bearer your_jwt_token'
  ```
 
 - Update product
-  PUT productCatalogService/api/products/{id}
+  PUT /api/products/{id}
 
-URL: http://localhost:8080/productCatalogService/api/products/{id}
+URL: http://localhost:8080/api/products/{id}
 
 Body:
 
@@ -191,73 +192,47 @@ Body:
   "stockQuantity": 5
 }
 ```
-cURL:
- ```
-curl --location --request PUT 'http://localhost:8080/productCatalogService/api/products' \
---header 'Content-Type: application/json' 'Cookie: JSESSIONID=74C6F75665CD6104040F88EDFC403656'\
---data '{
-  "id": 1,
-  "name": "Updated Product",
-  "description": "Updated Description",
-  "price": 150.0,
-  "category": "Updated Category",
-  "brand": "Updated Brand",
-  "stockQuantity": 5
-}
-'
- ```
 
 - Delete product
-  DELETE productCatalogService/api/products/{id}
+  DELETE /api/products/{id}
 
-URL: http://localhost:8080/productCatalogService/api/products/{id}
+URL: http://localhost:8080/api/products/{id}
 
 cURL:
  ```
-curl --location --request DELETE 'http://localhost:8080/productCatalogService/api/products/1' \
---header 'Cookie: JSESSIONID=74C6F75665CD6104040F88EDFC403656'
+curl --location --request DELETE 'http://localhost:8080/api/products/1' \
+--header 'Authorization: Bearer your_jwt_token'
  ```
 
 - Get products by brand
-  GET productCatalogService/api/products/brand?brand={brand}
+  GET /api/products/brand?brand={brand}
 
-URL: http://localhost:8080/productCatalogService/api/products/brand?brand={brand}
+URL: http://localhost:8080/api/products/brand?brand={brand}
 
 cURL:
  ```
-curl --location 'http://localhost:8080/productCatalogService/api/products/brand?brand=SpeedX' \
---header 'Cookie: JSESSIONID=269C25B347DA06D422226963D173162F'
+curl --location 'http://localhost:8080/api/products/brand?brand=BrandA' \
+--header 'Authorization: Bearer your_jwt_token'
  ```
 
 - Get products by category
-  GET productCatalogService/api/products/category?category={category}
+  GET /api/products/category?category={category}
 
-URL: http://localhost:8080/productCatalogService/api/products/category?category={category}
+URL: http://localhost:8080/api/products/category?category={category}
 
 cURL:
  ```
-curl --location 'http://localhost:8080/productCatalogService/api/products/category?category=Bicycles' \
---header 'Cookie: JSESSIONID=269C25B347DA06D422226963D173162F'
+curl --location 'http://localhost:8080/api/products/category?category=Category1' \
+--header 'Authorization: Bearer your_jwt_token'
  ```
 
 - Get products by price range
-  GET productCatalogService/api/products/price-range?min={min}&max={max}
+  GET /api/products/price-range?min={min}&max={max}
 
-URL: http://localhost:8080/productCatalogService/api/products/price-range?min={min}&max={max}
-
-cURL:
- ```
-curl --location 'http://localhost:8080/productCatalogService/api/products/price-range?min=1&max=40' \
---header 'Cookie: JSESSIONID=269C25B347DA06D422226963D173162F'
- ```
-
-- Get cache statistics
-  GET productCatalogService/api/cache/stats
-
-URL: http://localhost:8080/productCatalogService/api/cache/stats
+URL: http://localhost:8080/api/products/price-range?min={min}&max={max}
 
 cURL:
  ```
-curl --location 'http://localhost:8080/productCatalogService/api/products/cache/stats' \
---header 'Cookie: JSESSIONID=269C25B347DA06D422226963D173162F'
+curl --location 'http://localhost:8080/api/products/price-range?min=10&max=100' \
+--header 'Authorization: Bearer your_jwt_token'
  ```

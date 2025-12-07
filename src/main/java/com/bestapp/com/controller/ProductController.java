@@ -15,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -50,7 +52,9 @@ public class ProductController {
             }
     )
     @PostMapping
-    public ResponseEntity<ProductDTO> createProduct(@RequestBody @Valid CreateOrUpdateProductDTO createOrUpdateProductDTO) {
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<ProductDTO> createProduct(Authentication authentication,
+                                                    @RequestBody @Valid CreateOrUpdateProductDTO createOrUpdateProductDTO) {
         ProductDTO createdProductDTO = productService.createProduct(createOrUpdateProductDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdProductDTO);
     }
@@ -77,7 +81,9 @@ public class ProductController {
             }
     )
     @GetMapping
-    public ResponseEntity<List<ProductDTO>> getAllProducts(@RequestParam("pageNumber") @Positive Integer pageNumber,
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<List<ProductDTO>> getAllProducts(Authentication authentication,
+                                                           @RequestParam("pageNumber") @Positive Integer pageNumber,
                                                      @RequestParam("pageSize") @Positive Integer pageSize) {
         List<ProductDTO> foundProductDTOS = productService.findAllProducts(pageNumber, pageSize);
         if (foundProductDTOS == null) {
@@ -107,7 +113,8 @@ public class ProductController {
             }
     )
     @GetMapping("/brand")
-    public ResponseEntity<List<ProductDTO>> getProductsByBrand(@RequestParam("brand") @NotBlank String brand) {
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<List<ProductDTO>> getProductsByBrand(Authentication authentication, @RequestParam("brand") @NotBlank String brand) {
         List<ProductDTO> foundProductDTOS = productService.getProductsByBrand(brand);
         if (foundProductDTOS == null) {
             return ResponseEntity.notFound().build();
@@ -136,7 +143,9 @@ public class ProductController {
             }
     )
     @GetMapping("/category")
-    public ResponseEntity<List<ProductDTO>> getProductsByCategory(@RequestParam("category") @NotBlank String category) {
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<List<ProductDTO>> getProductsByCategory(Authentication authentication,
+                                                                  @RequestParam("category") @NotBlank String category) {
         List<ProductDTO> foundProductDTOS = productService.getProductsByCategory(category);
         if (foundProductDTOS == null) {
             return ResponseEntity.notFound().build();
@@ -167,7 +176,9 @@ public class ProductController {
             }
     )
     @GetMapping("/price-range")
-    public ResponseEntity<List<ProductDTO>> getProductsByPriceRange(@RequestParam("min") @Positive Double min,
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<List<ProductDTO>> getProductsByPriceRange(Authentication authentication,
+                                                                    @RequestParam("min") @Positive Double min,
                                                                     @RequestParam("max") @Positive Double max) {
         List<ProductDTO> foundProductDTOS = productService.getProductsByPriceRange(min, max);
         if (foundProductDTOS == null) {
@@ -197,7 +208,9 @@ public class ProductController {
             }
     )
     @PutMapping("/{id}")
-    public ResponseEntity<ProductDTO> updateProduct(@PathVariable("id") @Positive Long id,
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<ProductDTO> updateProduct(Authentication authentication,
+                                                    @PathVariable("id") @Positive Long id,
                                               @RequestBody @Valid CreateOrUpdateProductDTO createOrUpdateProductDTO) {
         ProductDTO updatedProductDTO = productService.updateProduct(id, createOrUpdateProductDTO);
         if (updatedProductDTO == null) {
@@ -219,7 +232,9 @@ public class ProductController {
             }
     )
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProductById(@PathVariable("id") @Positive Long id) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteProductById(Authentication authentication,
+                                                  @PathVariable("id") @Positive Long id) {
         productService.deleteProductById(id);
         return ResponseEntity.ok().build();
     }

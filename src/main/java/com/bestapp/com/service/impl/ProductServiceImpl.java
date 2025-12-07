@@ -4,7 +4,7 @@ import com.bestapp.com.cache.CacheType;
 import com.bestapp.com.cache.ProductCache;
 import com.bestapp.com.dto.CreateOrUpdateProductDTO;
 import com.bestapp.com.dto.ProductDTO;
-import com.bestapp.com.exception.ProductNotFoundException;
+import com.bestapp.com.exception.notFoundException.ProductNotFoundException;
 import com.bestapp.com.model.Product;
 import com.bestapp.com.repository.ProductRepository;
 import com.bestapp.com.service.ProductMapper;
@@ -26,6 +26,7 @@ import java.util.List;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
+    private final ProductMapper productMapper;
     private final ProductCache cache = new ProductCache();
 
     /**
@@ -36,8 +37,8 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public ProductDTO createProduct(CreateOrUpdateProductDTO createOrUpdateProductDTO) {
-        Product createdProduct = productRepository.save(ProductMapper.INSTANCE.createOrUpdateProductDTOtoProduct(createOrUpdateProductDTO));
-        ProductDTO productDTO = ProductMapper.INSTANCE.productToProductDTO(createdProduct);
+        Product createdProduct = productRepository.save(productMapper.createOrUpdateProductDTOtoProduct(createOrUpdateProductDTO));
+        ProductDTO productDTO = productMapper.productToProductDTO(createdProduct);
         cache.clearAll();
         return productDTO;
     }
@@ -64,9 +65,9 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public ProductDTO updateProduct(Long id, CreateOrUpdateProductDTO createOrUpdateProductDTO) {
         Product product = productRepository.findById(id).orElseThrow(ProductNotFoundException::new);
-        ProductMapper.INSTANCE.updateProduct(createOrUpdateProductDTO, product);
+        productMapper.updateProduct(createOrUpdateProductDTO, product);
         product = productRepository.save(product);
-        ProductDTO productDTO = ProductMapper.INSTANCE.productToProductDTO(product);
+        ProductDTO productDTO = productMapper.productToProductDTO(product);
         cache.clearAll();
         return productDTO;
     }
@@ -85,11 +86,11 @@ public class ProductServiceImpl implements ProductService {
         PageRequest pageRequest = PageRequest.of(pageNumber - 1, pageSize);
         List<Product> cached = cache.getFromCache("all", CacheType.ALL);
         if (!cached.isEmpty()) {
-            return ProductMapper.INSTANCE.productListToProductDTOList(cached);
+            return productMapper.productListToProductDTOList(cached);
         }
         List<Product> all = productRepository.findAll(pageRequest).getContent();
         cache.addToCache("all", CacheType.ALL, all);
-        return ProductMapper.INSTANCE.productListToProductDTOList(all);
+        return productMapper.productListToProductDTOList(all);
     }
 
     /**
@@ -103,11 +104,11 @@ public class ProductServiceImpl implements ProductService {
     public List<ProductDTO> getProductsByCategory(String category) {
         List<Product> cached = cache.getFromCache(category, CacheType.CATEGORY);
         if (!cached.isEmpty()) {
-            return ProductMapper.INSTANCE.productListToProductDTOList(cached);
+            return productMapper.productListToProductDTOList(cached);
         }
         List<Product> result = productRepository.findByCategoryIgnoreCase(category);
         cache.addToCache(category, CacheType.CATEGORY, result);
-        return ProductMapper.INSTANCE.productListToProductDTOList(result);
+        return productMapper.productListToProductDTOList(result);
     }
 
     /**
@@ -121,11 +122,11 @@ public class ProductServiceImpl implements ProductService {
     public List<ProductDTO> getProductsByBrand(String brand) {
         List<Product> cached = cache.getFromCache(brand, CacheType.BRAND);
         if (!cached.isEmpty()) {
-            return ProductMapper.INSTANCE.productListToProductDTOList(cached);
+            return productMapper.productListToProductDTOList(cached);
         }
         List<Product> result = productRepository.findByBrandIgnoreCase(brand);
         cache.addToCache(brand, CacheType.BRAND, result);
-        return ProductMapper.INSTANCE.productListToProductDTOList(result);
+        return productMapper.productListToProductDTOList(result);
     }
 
     /**
@@ -141,11 +142,11 @@ public class ProductServiceImpl implements ProductService {
         String key = min + "-" + max;
         List<Product> cached = cache.getFromCache(key, CacheType.PRICE);
         if (!cached.isEmpty()) {
-            return ProductMapper.INSTANCE.productListToProductDTOList(cached);
+            return productMapper.productListToProductDTOList(cached);
         }
         List<Product> result = productRepository.findByPriceBetween(min, max);
         cache.addToCache(key, CacheType.PRICE, result);
-        return ProductMapper.INSTANCE.productListToProductDTOList(result);
+        return productMapper.productListToProductDTOList(result);
     }
 
     /**

@@ -1,14 +1,14 @@
 package com.bestapp.com.controller;
 
-import com.bestapp.com.apiExceptionHandler.ApiResponse;
-import com.bestapp.com.apiExceptionHandler.ApiResponseHandler;
-import com.bestapp.com.dto.Login;
+import com.bestapp.com.dto.Register;
+import com.bestapp.com.security.dto.JWTRequest;
+import com.bestapp.com.security.dto.JWTResponse;
+import com.bestapp.com.security.dto.RefreshJWTRequest;
 import com.bestapp.com.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -28,7 +28,26 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
-    private final ApiResponseHandler apiResponseHandler;
+
+    /**
+     * Register a new user.
+     * @return the HTTP 201 status code (Created).<br>
+     */
+    @Operation(
+            summary = "User registration",
+            responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Created", content = @Content(schema = @Schema(hidden = true)))
+            },
+            tags = "Registration"
+    )
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody Register register) {
+        if (authService.register(register)) {
+            return ResponseEntity.status(HttpStatus.CREATED).build();
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
 
     /**
      * User authorization process.
@@ -41,36 +60,43 @@ public class AuthController {
             tags = "Authorization"
     )
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody @Valid Login login, HttpSession session) {
-        String username = (String) session.getAttribute("username");
-        if (username != null) {
-            return apiResponseHandler.createErrorResponse("Already logged in as: " + username);
-        }
-        if (authService.login(login.getUsername(), login.getPassword())) {
-            return apiResponseHandler.createSuccessResponse("Login successful.");
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+    public ResponseEntity<JWTResponse> login(@RequestBody @Valid JWTRequest authRequest) {
+        final JWTResponse tokenResponse = authService.login(authRequest);
+        return ResponseEntity.ok(tokenResponse);
     }
 
+
     /**
-     * User logout process.
+     * Get a new access token when it became invalid.
+     * @return the HTTP 200 status code (OK).<br>
      */
     @Operation(
-            summary = "User logout",
+            summary = "Gets a new access token when it became invalid",
             responses = {
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(hidden = true)))
             },
-            tags = "Logout"
+            tags = "Getting a new access token"
     )
-    @PostMapping("/logout")
-    public ResponseEntity<ApiResponse> logout(HttpSession session) {
-        String username = (String) session.getAttribute("username");
-        if (username == null) {
-            return apiResponseHandler.createErrorResponse("No user is currently logged in.");
-        }
-        authService.logout();
-        session.invalidate();
-        return apiResponseHandler.createSuccessResponse("Logged out successfully.");
+    @PostMapping("/token")
+    public ResponseEntity<JWTResponse> getNewAccessToken(@RequestBody RefreshJWTRequest request) {
+        final JWTResponse tokenResponse = authService.getAccessToken(request.getRefreshToken());
+        return ResponseEntity.ok(tokenResponse);
+    }
+
+    /**
+     * Get a new access and refresh tokens when it became invalid.
+     * @return the HTTP 200 status code (OK).<br>
+     */
+    @Operation(
+            summary = "Gets a new access and refresh tokens when it became invalid",
+            responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(hidden = true)))
+            },
+            tags = "Getting a new access and refresh tokens"
+    )
+    @PostMapping("/refresh")
+    public ResponseEntity<JWTResponse> getNewRefreshToken(@RequestBody RefreshJWTRequest request) {
+        final JWTResponse tokenResponse = authService.refreshToken(request.getRefreshToken());
+        return ResponseEntity.ok(tokenResponse);
     }
 }

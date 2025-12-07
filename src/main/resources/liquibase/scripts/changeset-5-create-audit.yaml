@@ -1,6 +1,16 @@
 databaseChangeLog:
   - changeSet:
-      id: 401-create-audit-table
+      id: 401-create-audit-sequence
+      author: alex
+      changes:
+        - createSequence:
+            sequenceName: audit_seq
+            schemaName: app_data
+            startValue: 1
+            incrementBy: 1
+
+  - changeSet:
+      id: 402-create-audit-table
       author: alex
       changes:
         - createTable:
@@ -10,7 +20,7 @@ databaseChangeLog:
               - column:
                   name: id
                   type: BIGINT
-                  defaultValueComputed: "nextval('audit_seq')"
+                  defaultValueComputed: "nextval('app_data.audit_seq')"
                   constraints:
                     nullable: false
                     primaryKey: true
@@ -34,13 +44,3 @@ databaseChangeLog:
                   type: TIMESTAMP
                   constraints:
                     nullable: false
-
-  - changeSet:
-      id: 402-create-audit-sequence
-      author: alex
-      changes:
-        - createSequence:
-            sequenceName: audit_seq
-            schemaName: app_data
-            startValue: 1
-            incrementBy: 1
